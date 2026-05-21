@@ -6,8 +6,7 @@
 
 1. [Enumerations](#enumerations)
 2. [Ontology](#ontologies)
-3. [Ontology map](#ontology-maps)
-4. [Complete Example](#complete-example)
+3. [Ontology mappings](#ontology-mappings)
 
 ---
 
@@ -17,18 +16,37 @@ Standard enumeration values used throughout the specification.
 
 ### Concept types
 
-Ontologies distinguish two different kinds of concepts.
-An entity type is a concept that represents real-world objects that must be referenced using other information.
-For instance, a person might be referenced by their social security number
-or private e-mail address.
-A value type is a concept that represents instances of some data type
-(i.e SQL types like Integer or String) with additional semantics.
-For instance, a social-security number is a string or positive integer that comprises exactly nine digits.
+Ontologies distinguish two different kinds of concepts:
 
-| Multiplicity | Description |
+| ConceptType | Description |
 |---------|-------------|
 | `EntityType` | Real-world concept that must be referenced using other information |
 | `ValueType` | A datatype with additional semantics |
+
+An entity type is a concept that represents real-world objects that must be referenced using other
+information. For instance, a person might be referenced by their social security number or private
+e-mail address. In some modeling languages these are called either entities or object types.
+
+A value type is a concept that represents instances of some data type (i.e SQL types like Integer
+or String) with additional semantics. For instance, a social-security number is a string or positive
+integer that comprises exactly nine digits. In some modeling langauges these are called data types
+or domains.
+
+### Built-in concepts
+
+Ontologies come with several built in concepts that can be referred to by name:
+
+| BuiltInConcept | Description |
+|---------|-------------|
+| `Any` | Most general entity type |
+| `Boolean` | Most general boolean value type |
+| `Date` | Most general date value type |
+| `DateTime` | Most general datetime value type |
+| `Decimal` | Most general decimal value type |
+| `Float` | Most general floating point value type |
+| `Integer` | Most general integer value type |
+| `String` | Most general string value type |
+
 
 ### Multiplicities
 
@@ -44,15 +62,18 @@ The allowable multiplicities of relationships defined in the [Ontology](#ontolog
 Ontologies are conceptual models of enterprise data that describe the enterprise in terms
 of concepts, relationships, and business rules. This specification represents ontologies
 hierarchically, grouping each relationship under the concept that plays its first role.
+Every ontology implicitly includes all of the built-in concepts (see Built-in concepts
+enumeration above) and may refer to them by name without declaring them.
 
 ### Concepts
 
 Concepts represent the types of things that have meaning in a business setting, e.g., person, company,
 or salary. Each concept is either an entity type or a value type. Ontologies implicitly include a
-value-type for each basic data type, like `Integer`, `Decimal`, and `String`, and an entity type
-called `Any`. Every other concept ontology extends (is a subtype of) one of these concepts.
+set of [built-in concepts](#built-in-concepts), including a value-type for each basic data type,
+like `Integer`, `Decimal`, and `String`, and a most-general entity type called `Any`. Every other
+concept in an ontology extends (is a subtype of) one of these concepts.
 
-Concepts conform to the following schema:
+Concepts have to the following schema:
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -70,11 +91,11 @@ Concepts conform to the following schema:
 Every user-declared concept extends one or more concepts in the ontology. The new concept
 is a sutype of each concept that it extends, and the extended concepts are its supertypes.
 
-Any concept that directly or indirectly extends a value type like `Integer` or `String` is a value type.
-Any concept that does not extend some value type is an entity type, and if a concept declares no extends
-list, then it is assumed to extend the built-in entity type `Any`. If `SocialSecurityNr` extends `Integer`
-and `Employee` extends `Person`, which declares no extends list, then `SocialSecurityNr` is a value type
-and both `Person` and `Employee` are entity types.
+Any value type concept that is introduced in an ontology must either directly or indirectly
+extend one of the built-in value types like `Integer` and `String`.
+
+Entity type concepts can only extend other entity type concepts, and every entity type
+implicitly extends the built-in concept `Any`.
 
 ### Relationships
 
@@ -137,7 +158,7 @@ using this schema:
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `player` | string | Yes | Name of the concept that plays this role |
+| `concept` | string | Yes | Name of the concept that plays this role |
 | `name` | string | No | Optional role name |
 
 For instance, in:
@@ -166,7 +187,7 @@ ternary relationship `Person.purchased_on` declares two additional roles played 
 
 The role player often suffices to distinguish the role within its relationship, but when
 the same concept plays more than one role, the user must declare a distinguising name for
-any additional role whose player does not suffice to distinguish it from other roles in
+any additional role whose player's name does not distinguish it from other roles in
 the same relationship. For instance, in:
 
 ```yaml
@@ -207,11 +228,8 @@ the first n-1 roles.
 
 In the special case of a binary relationship, one might declare a `OneToOne` multiplicity, which
 indicates the relationship is many-to-one in both directions. For instance, the `Person.nr`
-relationship is one-to-one because each person is assigned at most one social security number
-and each social security number is assigned to at most one person.
-
-In the absence of any multiplicity, we make no assumptions of functional dependencies among
-any of the roles.
+relationship is one-to-one because each person is identified by at most one social security number
+and each social security number identifies at most one person.
 
 ### Identifying relationships
 
@@ -252,22 +270,22 @@ ontologies:
             roles:
               - concept: TaxRate
             derived_by:
-              - "10.0 WHERE ( Person.files_single AND Person.earns <= 11925 )"
-              - "10.0 WHERE ( Person.files_married_joint AND Person.earns <= 23850 )"
+              - "Person.files_single AND Person.earns <= 11925 AND TaxRate == 10.0"
+              - "Person.files_married_joint AND Person.earns <= 23850 AND TaxRate == 10.0"
               - ...
 ```
 
 declares two derived relationships -- `ancestor_of` and `taxed_at`. Each link of `Person.ancestor_of`
 relates a person to one of its descendants. The two expressions form the base and recursive cases for
-this calculation. In the base case, a `Person` as an ancestor of some `descendant` if that `Person`
+this calculation. In the base case, a `Person` is an ancestor of some `descendant` if that `Person`
 is the parent of that descendant. And in the recursive case, a `Person` is an ancestor of some
 `descendant` if that `Person` is an ancestor of the parent of that `descendant`. Notice in this
 example how role names are used to disambiguate the two `Person` roles in this relationship.
 
 Each link of `Person.taxed_at` links a `Person` object to a `TaxRate` that is derived using
 expressions that determine the rate based on the person's filing status and how much they earn.
-If, for some person, none of the expressions can be evaluated, then the relationship will have
-no link involving that person.
+If, for some person, none of the expressions can be evaluated, then the relationship will
+not link that person.
 
 Expressions that derive a relationship are interpreted as rules for constructing the links of the
 relationship in the same way that a SQL query is interpreted as a rule for constructing the rows
@@ -277,7 +295,7 @@ here) then that object will implicitly play the last role, and the expression mu
 of the other roles explicitly. If an expression does not evaluate to any object, then it must
 explicitly reference each role.
 
-A derived concept is one whose population is derived from those of its supertype concepts
+A derived concept is one whose population is derived from that of its supertype concepts
 using one or more expressions. For instance:
 
 ```yaml
@@ -343,12 +361,21 @@ requires any item that has sales in some store to be offered in that store.
 
 Ontology mappings declare how to map the values of fields at the logical level to objects and links
 in the ontology. Just as ontologies are partitioned by concept, ontology maps partition into concept
-maps that group by some concept in the ontology.
+mappings that group by some concept.
 
-Each concept map declares how to populate a concept with objects and how to populate the relationships
-that are primarily keyed by that concept with links. These declarations are formed from patterns
-of expressions that reference fields in a logical model that is declared using the OSI core semantic
-model spec.
+### Concept mappings
+
+Each concept mapping declares how to populate a concept with objects and how to populate the relationships
+that group under that concept with links. These declarations are formed from patterns of expressions that
+reference fields in a logical model that is declared using the OSI core semantic model spec.
+
+Concept mappings have the following schema:
+
+| Field | Type | Required | Description |
+|---------------|---------|-----|-------|
+| `concept`         | string  | Yes | Names the concept whose part of the ontology is covered by this concept mapping |
+| `object_mappings` | string  | if no `link_mappings` | Mappings that populate this concept |
+| `link_mappings`   | list  | if no `object_mappings` | Mappings that populate the relationships grouped under this concept |
 
 ### Object mappings
 
@@ -363,20 +390,18 @@ An object mapping has the following schema:
 | `expression`  | string  | if no `referent_mappings` | SQL expression that computes a value from fields |
 | `referent_mappings` | list  | if no `expression` | Referent mappings that find entity objects using identifying realtionships |
 
-When the concept is a value type, an object mapping is just a SQL expression that computes its values.
-For instance, an object map that computes `SocialSecurityNumber` values would either retrieve or stitch
-together an integer value that satisfies any constraints.
+When the concept is a value type or an entity type with a simple identifier, then an object mapping is just
+a SQL expression. For instance, given this ontology snippet:
 
-In addition, when a concept is an entity type with a simple identifier -- one relationship that uses some
-value type to uniquely reference the concept -- the object map is just a SQL expression that computes the
-values of the identifying value type and then maps those values to objects of tha entity type using the
-identifier relationship.
-
-Given this ontology:
 ```yaml
 ontologies:
   - name: EnterpriseOntology
     concepts:
+      - concept:
+        name: SocialSecurityNr
+        type: ValueType
+        extends: [ Integer ]
+        requires: [ "0 < SocialSecurityNr", "SocialSecurityNr <= 999999999" ]
       - concept:
           name: Person
           type: EntityType
@@ -388,7 +413,15 @@ ontologies:
             multiplicity: OneToOne
             verbalizes: [ "{Person} is identified by {SocialSecurityNr}" ]
 ```
-this concept mapping:
+
+an object mapping that computes `SocialSecurityNumber` values would use a SQL expression to retrieve or
+stitch together an integer value and check that the value satisfies the constraints on that concept.
+
+Because `Person` uses a simple identifier -- one that involves one relationship that uses some
+value type to uniquely reference the concept -- an object mapping can find its objects using a
+SQL expression that computes the values of its identifying value type (`SocialSecurityNr`) and
+then mapping those values to `Person` objects using the declared identifier relationship.
+The object mapping in:
 
 ```yaml
 concept_mappings:
@@ -397,18 +430,16 @@ concept_mappings:
       - expression: PERSONS.SSN                  
   ...
 ```
-uses an object mapping to declare how values from the `SSN` field of dataset `PERSONS` are
-used to form `Person` objects. More precisely, the mapping declares to use `SSN` values to
-form `SocialSecurityNr` values that are supplied to `nr` relationship, which is used to
-identify `Person`. These additional details can be inferred because the object mapping is
-attempting to populate the entity type `Person`, which declares a simple preferred identifier.
+maps values from the `SSN` field of dataset `PERSONS` into `Person` objects. More precisely,
+the mapping declares to use `SSN` values to form `SocialSecurityNr` values that are supplied
+to `nr` relationship, which is used to identify `Person`.
 
-When the concept is an entity type that does not provide a simple preferred identifier, the
-object mapping is an array of referent mappings, each of which declares how to use one of its
-identifying relationships to find its objects given other objects (values and/or objects of
-another entity type).
+When an entity-type concept does not provide a simple identifier, the object mapping is an
+array of referent mappings, each of which declares how to use one of its identifying
+relationships to find its objects given other objects (values and/or objects of another
+entity type).
 
-A referent mapping has the following schema:
+Referent mappings have the following schema:
 
 | Field | Type | Required | Description |
 |----------------|--------|-----|-------|
@@ -459,30 +490,28 @@ The nested referent mappings are needed because `Order` is an entity type.
 
 #### Link mappings
 
-A concept mapping's `link_mappings` array describes how to map logical field schema to the
-relationships that group under the concept associated with the mapping.
-Each link mapping is a tree structure that concisely declares how field values map to the
-links of one or more of these relationships. More precisely, the path from the root of a
-tree to a node describes how to map to tuples of objects that form the links of the relationship
-that is named by the node. These structures leverage the hierarchical nature of YAML to avoid
-duplication in the typical case when the fields of a single dataset map to many relationships.
+Link mappings describe how to map logical field schema to the relationships that group under the
+concept associated with the mapping. These mappings are organized into tree structures to avoid
+duplication and clarify mapping intent in the typical case when fields map to objects that play
+roles in many different relationships.
 
-Each link mapping has the following schema:
+Link mappings have the following schema:
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `concept` | string | when level > 1 | Concept whose objects are looked up by this node |
-| `value` | string | if no `entity` | Expression that computes a value (when concept is a value type) |
-| `entity` | list | if no `value` | Entity map that looks up an entity (when concept is an entity type) |
-| `relationship` | string | No | Relationship whose links are mapped to by the path to this node |
+| `object_mapping` | object | Yes | Maps to objects in the last position of mapped tuples |
+| `relationship` | string | No | Relationship whose links include the tuples mapped to by this mapping |
 | `children` | list | No | List of child nodes in the tree |
 
-Each node must provide either a `value` or an `entity` by which to look up objects but never both.
-The level of each node coincides with the arity of the associated relationship. So a root node
-could map to a unary relationship, a node at level 2 could map to a binary relationship, and so
-forth.
+Semantically, each link mapping uses a pattern of SQL expressions to map to object tuples, which
+can then be used to form the links of the relationship that is named by the mapping as prefixes
+of longer tuples that are mapped to by its child link mappings.
 
-For instance, the `links` array declared here:
+The level of a link mapping must coincide with the arity of the relationship it names. So a
+top-level mapping could name a unary relationship, a mapping at level 2 could name to a binary
+relationship, and so forth.
+
+For instance, this ontology snippet:
 
 ```yaml
 ontologies:
@@ -510,66 +539,51 @@ ontologies:
             roles: [ concept: Store, concept: Amount ]
             verbalizes: [ "{Item} sells in {Store} for {Amount}" ]
             multiplicitly: ManyToOne
-ontology_mappings:
-  - name: flights_map
-    description: Example mapping of logical fields to ontology concepts and relationships
-    ontology: flights
-    logical_model:
-      name: Logical_Flights_Model
-      description: Logical model for flight data
-      datasets:
-        ...
+```
+declares one unary, one binary, and two ternary relationships whose links would be tuples
+of the form (Item), (Item, Store), and (Item, Store, Amount) respectively. And suppose a
+logical model declares a dataset called `METRICS` with fields like `SKU`, `STORE`, `SALES`,
+and `RETURNS` among many others. This link mapping populates the relationships using these
+fields:
+
+```yaml
     concept_mappings:
       - concept: Item
-        object_mappings:
-          - referent_mappings:
-              relationship: Item.nr
-              expression: ITEMS.SKU
         link_mappings:
           - object_mapping:
               referent_mappings:
                 relationship: Item.nr
                 expression: METRICS.SKU
-            populates: Item.active
+            relationship: Item.active
             children:
               - object_mapping:
                   concept: Store
                   expression: METRICS.STORE
-                populates: Item.active_in
+                relationship: Item.active_in
                 children:
                   - object_mapping:
                       concept: Amount
                       expression: METRICS.SALES
-                    populates: Item.sold_in_for
+                    relationship: Item.sold_in_for
                   - object_mapping:
                       concept: Amount
                       expression: METRICS.RETURNS
-                    populates: Item.returned_in_for
+                    relationship: Item.returned_in_for
 ```
 
-describes a tree with one root node, one node at level 2, and two nodes at level 3.
-Each node maps fields of the `METRICS` dataset to links of four different relationships,
-and notice how the mapping to `Item` objects is declared once even though `Item` plays a
-role in all four of the relationships and that the mapping to `Store` objects is declared
-once even though `Store` plays a role in three of the relationships.
+The top level mapping is a tree with one root node, one node at level 2, and two nodes at
+level 3. Each node maps fields of the `METRICS` dataset to links of four different relationships,
+and notice how the mapping to `Item` objects is declared once even though `Item` plays a role in
+all four of the relationships and that the mapping to `Store` objects is declared once even
+though `Store` plays a role in three of the relationships.
 
-
----
-
-## Complete Example
-
-Here's a complete ontology example showing all components working together:
-
-```yaml
 ```
 
 ## Version History
 
-- **0.1.1** (2026-05-20): Support for both logical and conceptual modeling layers (ontologies)
-  - Core ontology structure
-  - Support for concepts, relationships, and logical -> conceptual schema mappings
-  - Renamed relationships in the logical layer to join paths to avoid conflict with
-    relationships in the conceptual layer
+- **0.1.1** (2026-05-21): Basic support for ontologies and logical schema mappings
+  - Core ontology structure: Concepts, relationships, and business rules (requires and derived_by)
+  - Schema mappings from one or more logical models into an ontology
 
 ---
 
