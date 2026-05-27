@@ -11,8 +11,6 @@ Usage:
     python honeydew_osi_converter.py honeydew-to-osi -i workspace_dir/ -o output.yaml
 """
 
-from __future__ import annotations
-
 import argparse
 import json
 import os
@@ -26,6 +24,7 @@ import yaml
 SUPPORTED_OSI_VERSION = "0.2.0.dev0"
 HONEYDEW_VENDOR = "HONEYDEW"
 _OSI_METADATA_SECTION = "osi"
+_HD_ATTR_KEYS = ("display_name", "hidden", "folder", "format_string", "timegrain")
 
 
 class HoneydewConversionError(Exception):
@@ -234,8 +233,6 @@ def _dataset_to_files(
         hd_hint = _get_honeydew_extension(field)
         force_calc = hd_hint.get("type") == "calculated_attribute"
 
-        _hd_attr_keys = ("display_name", "hidden", "folder", "format_string", "timegrain")
-
         if _is_simple_identifier(expr) and not force_calc:
             attr: dict[str, Any] = {"column": expr, "name": field_name, "datatype": datatype}
             if effective_desc:
@@ -244,9 +241,9 @@ def _dataset_to_files(
                 attr["labels"] = labels
             if field_meta:
                 attr["metadata"] = [field_meta]
-            for _k in _hd_attr_keys:
-                if _k in hd_hint:
-                    attr[_k] = hd_hint[_k]
+            for k in _HD_ATTR_KEYS:
+                if k in hd_hint:
+                    attr[k] = hd_hint[k]
             dataset_attrs.append(attr)
         else:
             calc: dict[str, Any] = {
@@ -262,9 +259,9 @@ def _dataset_to_files(
                 calc["labels"] = labels
             if field_meta:
                 calc["metadata"] = [field_meta]
-            for _k in _hd_attr_keys:
-                if _k in hd_hint:
-                    calc[_k] = hd_hint[_k]
+            for k in _HD_ATTR_KEYS:
+                if k in hd_hint:
+                    calc[k] = hd_hint[k]
             calc_attrs.append(calc)
 
     # ── dataset YAML ───────────────────────────────────────────────────────────
@@ -931,6 +928,12 @@ def _dump(data: Any) -> str:
     return yaml.dump(data, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
 
+def _check_safe_path(output_abs: str, rel_path: str) -> bool:
+    """Return True iff the resolved path stays inside output_abs."""
+    full = os.path.normpath(os.path.join(output_abs, rel_path))
+    return full.startswith(output_abs + os.sep)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # CLI
 # ─────────────────────────────────────────────────────────────────────────────
@@ -963,10 +966,10 @@ def main() -> None:
 
         output_abs = os.path.abspath(args.output)
         for rel_path, content in files.items():
-            full_path = os.path.normpath(os.path.join(output_abs, rel_path))
-            if not full_path.startswith(output_abs + os.sep):
+            if not _check_safe_path(output_abs, rel_path):
                 print(f"Error: refusing to write outside output directory: {rel_path}", file=sys.stderr)
                 sys.exit(1)
+            full_path = os.path.normpath(os.path.join(output_abs, rel_path))
             os.makedirs(os.path.dirname(full_path), exist_ok=True)
             with open(full_path, "w") as f:
                 f.write(content)

@@ -35,6 +35,11 @@ Bidirectional converter between [OSI](../../core-spec/spec.md) semantic models a
 | `entity.relations` (`one-to-many`) | `relationship` with `from` = target entity |
 | `metric.sql` | `metric` expression in `ANSI_SQL` dialect |
 
+## Requirements
+
+- Python 3.12+
+- PyYAML 6.0+
+
 ## Setup
 
 ```bash
