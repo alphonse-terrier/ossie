@@ -51,10 +51,12 @@ def convert_osi_to_honeydew(osi_yaml_str: str) -> dict[str, str]:
             attributes/<field>.yml   (computed fields only)
             metrics/<metric>.yml
 
-    OSI fields with no direct Honeydew equivalent (``ai_context``,
-    ``unique_keys``, non-Honeydew ``custom_extensions``, relationship
-    ``name``) are stored in the Honeydew ``metadata`` section under a section
-    named ``"osi"`` so they can be recovered on the return trip.
+    ``ai_context`` is mapped to Honeydew's native fields (``description``,
+    ``labels``, and the AI metadata section); the structured form is also
+    stored in ``metadata`` for lossless round-tripping. ``unique_keys`` and
+    non-Honeydew ``custom_extensions`` have no direct Honeydew equivalent and
+    are stored in the Honeydew ``metadata`` section under a section named
+    ``"osi"`` so they can be recovered on the return trip.
 
     Args:
         osi_yaml_str: OSI YAML document as a string.

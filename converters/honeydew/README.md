@@ -17,8 +17,9 @@ Bidirectional converter between [OSI](../../core-spec/spec.md) semantic models a
 | `dataset` | Entity + dataset files under `schema/<entity>/` |
 | `dataset.source` | `dataset.sql` |
 | `dataset.primary_key` | `entity.keys` |
-| Simple column field | `dataset.attributes` entry |
-| Computed field expression | `calculated_attribute` YAML |
+| Simple column field | Source Attribute (`dataset.attributes` entry) |
+| Computed field expression | Calculated Attribute (`calculated_attribute` YAML) |
+| `field.ai_context` | AI Metadata on the attribute or entity |
 | `relationship` (from → to) | `entity.relations` on the "from" entity (`rel_type: many-to-one`) |
 | `metric` | `metric` YAML (assigned to entity by expression parse) |
 
@@ -66,7 +67,7 @@ python -m pytest tests/
 
 ## Limitations
 
-- **One dataset per entity**: The converter maps each OSI dataset to a single Honeydew entity with one source dataset. Multiple datasets per entity are not generated.
+- **One source dataset per entity**: Honeydew entities can have multiple source dataset files; the converter always generates exactly one, because an OSI `dataset` block describes a single table or SQL query.
 - **Datatype inference**: OSI fields have no explicit datatype; the converter infers Honeydew datatypes from the `dimension.is_time` flag (`timestamp`) and the presence/absence of the `dimension` key (`string` vs `number`).
 - **Honeydew SQL expressions**: Calculated attributes and metrics use Honeydew's `entity.attribute` reference syntax. These are exported as `ANSI_SQL` dialect expressions in OSI; they remain valid for round-tripping but may not run on other databases without adaptation.
 - **Perspectives and domains**: Not converted (no OSI equivalent).
