@@ -15,6 +15,7 @@ from honeydew_osi_converter import (
     _assign_metrics_to_entities,
     _build_osi_metadata,
     _check_safe_path,
+    _fields_to_honeydew,
     _find_entity_in_expression,
     _honeydew_datatype_to_osi_dimension,
     _is_simple_identifier,
@@ -1106,3 +1107,149 @@ def test_malformed_osi_metadata_json_warns(tmp_path):
         warnings.simplefilter("always")
         convert_honeydew_to_osi(str(tmp_path))
     assert any("unique_keys" in str(x.message) for x in w)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# _fields_to_honeydew unit tests
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_fields_to_honeydew_simple_identifier_goes_to_dataset():
+    fields = [{"name": "status", "expression": {"dialects": [{"dialect": "ANSI_SQL", "expression": "status"}]},
+               "dimension": {"is_time": False}}]
+    dataset_attrs, calc_attrs = _fields_to_honeydew(fields, "orders")
+    assert len(dataset_attrs) == 1 and len(calc_attrs) == 0
+    assert dataset_attrs[0]["column"] == "status"
+
+
+def test_fields_to_honeydew_complex_sql_goes_to_calc():
+    fields = [{"name": "disc", "expression": {"dialects": [{"dialect": "ANSI_SQL", "expression": "price * 0.9"}]}}]
+    dataset_attrs, calc_attrs = _fields_to_honeydew(fields, "orders")
+    assert len(dataset_attrs) == 0 and len(calc_attrs) == 1
+    assert calc_attrs[0]["sql"] == "price * 0.9"
+
+
+def test_fields_to_honeydew_missing_name_raises():
+    fields = [{"expression": {"dialects": [{"dialect": "ANSI_SQL", "expression": "col"}]}}]
+    with pytest.raises(HoneydewConversionError, match="missing 'name'"):
+        _fields_to_honeydew(fields, "orders")
+
+
+def test_fields_to_honeydew_empty_expression_skipped():
+    fields = [{"name": "bad", "expression": {"dialects": [{"dialect": "ANSI_SQL", "expression": ""}]}}]
+    dataset_attrs, calc_attrs = _fields_to_honeydew(fields, "orders")
+    assert dataset_attrs == [] and calc_attrs == []
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Connectionless relation warning
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_connectionless_relation_warns():
+    model = {"name": "m", "datasets": [
+        {"name": "orders", "source": "db.s.orders", "fields": []},
+        {"name": "customers", "source": "db.s.customers", "fields": []},
+    ], "relationships": [{"name": "r", "from": "orders", "to": "customers"}]}
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        files = convert_osi_to_honeydew(_osi(model))
+    assert any("resolve the join" in str(x.message) for x in w)
+    entity = yaml.safe_load(files["schema/orders/orders.yml"])
+    assert entity["relations"][0]["target_entity"] == "customers"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# vendors round-trip
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_vendors_roundtrip_preserves_non_honeydew(tmp_path):
+    doc = yaml.dump({
+        "version": OSI_VERSION,
+        "vendors": ["SNOWFLAKE", "HONEYDEW"],
+        "semantic_model": [{"name": "m", "datasets": []}],
+    })
+    files = convert_osi_to_honeydew(doc)
+    for rel_path, content in files.items():
+        p = tmp_path / rel_path
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(content)
+    result = yaml.safe_load(convert_honeydew_to_osi(str(tmp_path)))
+    assert "SNOWFLAKE" in result["vendors"]
+    assert "HONEYDEW" in result["vendors"]
+
+
+def test_vendors_always_includes_honeydew(tmp_path):
+    doc = yaml.dump({
+        "version": OSI_VERSION,
+        "vendors": ["SNOWFLAKE"],
+        "semantic_model": [{"name": "m", "datasets": []}],
+    })
+    files = convert_osi_to_honeydew(doc)
+    for rel_path, content in files.items():
+        p = tmp_path / rel_path
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(content)
+    result = yaml.safe_load(convert_honeydew_to_osi(str(tmp_path)))
+    assert result["vendors"][0] == "HONEYDEW"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# main() CLI smoke tests
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_main_osi_to_honeydew(tmp_path):
+    import subprocess, sys
+    input_file = tmp_path / "model.yaml"
+    input_file.write_text(yaml.dump({
+        "version": OSI_VERSION,
+        "semantic_model": [{"name": "m", "datasets": [
+            {"name": "orders", "source": "db.s.orders", "fields": []}
+        ]}],
+    }))
+    output_dir = tmp_path / "out"
+    result = subprocess.run(
+        [sys.executable, str(Path(__file__).resolve().parent.parent / "src" / "honeydew_osi_converter.py"),
+         "osi-to-honeydew", "-i", str(input_file), "-o", str(output_dir)],
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 0
+    assert (output_dir / "workspace.yml").exists()
+    ws = yaml.safe_load((output_dir / "workspace.yml").read_text())
+    assert ws["name"] == "m"
+
+
+def test_main_honeydew_to_osi(tmp_path):
+    import subprocess, sys
+    _write_workspace(str(tmp_path), "ws", [{
+        "name": "orders", "keys": ["id"], "key_dataset": "orders",
+        "sql": "DB.S.ORDERS", "dataset_attrs": [],
+    }])
+    output_file = tmp_path / "output.yaml"
+    result = subprocess.run(
+        [sys.executable, str(Path(__file__).resolve().parent.parent / "src" / "honeydew_osi_converter.py"),
+         "honeydew-to-osi", "-i", str(tmp_path), "-o", str(output_file)],
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 0
+    assert output_file.exists()
+    doc = yaml.safe_load(output_file.read_text())
+    assert doc["semantic_model"][0]["name"] == "ws"
+
+
+def test_main_path_traversal_rejected(tmp_path):
+    import subprocess, sys
+    # Entity name containing traversal sequences generates paths that escape output_dir
+    input_file = tmp_path / "model.yaml"
+    input_file.write_text(
+        f"version: '{OSI_VERSION}'\nsemantic_model:\n"
+        "  - name: m\n    datasets:\n"
+        "      - name: '../../evil'\n        source: db.s.evil\n        fields: []\n"
+    )
+    output_dir = tmp_path / "out"
+    result = subprocess.run(
+        [sys.executable, str(Path(__file__).resolve().parent.parent / "src" / "honeydew_osi_converter.py"),
+         "osi-to-honeydew", "-i", str(input_file), "-o", str(output_dir)],
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 1
+    assert "refusing to write" in result.stderr
+    assert not (tmp_path / "evil.yml").exists()

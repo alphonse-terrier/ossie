@@ -43,7 +43,9 @@ Bidirectional converter between [OSI](../../core-spec/spec.md) semantic models a
 ## Setup
 
 ```bash
-pip install -r requirements.txt
+pip install .
+# or in editable mode for development:
+pip install -e .
 ```
 
 ## Usage

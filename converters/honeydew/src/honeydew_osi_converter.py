@@ -85,10 +85,11 @@ def convert_osi_to_honeydew(osi_yaml_str: str) -> dict[str, str]:
             "only the first will be converted"
         )
 
-    return _model_to_files(semantic_models[0])
+    vendors = [v for v in (root.get("vendors") or []) if v != HONEYDEW_VENDOR]
+    return _model_to_files(semantic_models[0], extra_vendors=vendors)
 
 
-def _model_to_files(sm: dict[str, Any]) -> dict[str, str]:
+def _model_to_files(sm: dict[str, Any], *, extra_vendors: list[str] | None = None) -> dict[str, str]:
     name = sm.get("name")
     if not name:
         raise HoneydewConversionError("Missing 'name' in semantic model")
@@ -99,10 +100,14 @@ def _model_to_files(sm: dict[str, Any]) -> dict[str, str]:
     if sm.get("description"):
         workspace["description"] = sm["description"]
 
-    # Preserve model-level ai_context and non-HONEYDEW custom_extensions
+    # Preserve model-level ai_context, non-HONEYDEW custom_extensions, and extra vendors
     model_ai_ctx = sm.get("ai_context")
     model_ext = [e for e in (sm.get("custom_extensions") or []) if e.get("vendor_name") != HONEYDEW_VENDOR]
-    ws_meta = _build_osi_metadata(ai_context=model_ai_ctx, custom_extensions=model_ext or None)
+    ws_meta = _build_osi_metadata(
+        ai_context=model_ai_ctx,
+        custom_extensions=model_ext or None,
+        extra_vendors=extra_vendors or None,
+    )
     if ws_meta:
         workspace["metadata"] = [ws_meta]
 
@@ -139,57 +144,11 @@ def _model_to_files(sm: dict[str, Any]) -> dict[str, str]:
     return files
 
 
-def _dataset_to_files(
-    ds: dict[str, Any],
-    relations: list[dict[str, Any]],
-    metrics: list[dict[str, Any]],
-) -> dict[str, str]:
-    entity_name = ds["name"]
-    base = f"schema/{entity_name}"
-    files: dict[str, str] = {}
-
-    primary_key = ds.get("primary_key") or []
-    unique_keys = ds.get("unique_keys")
-    description = ds.get("description")
-    ai_context = ds.get("ai_context")
-    fields = ds.get("fields") or []
-    ds_ext = [e for e in (ds.get("custom_extensions") or []) if e.get("vendor_name") != HONEYDEW_VENDOR]
-
-    # ── entity YAML ────────────────────────────────────────────────────────────
-    entity_dict: dict[str, Any] = {"type": "entity", "name": entity_name}
-    if description:
-        entity_dict["description"] = description
-    if primary_key:
-        entity_dict["keys"] = list(primary_key)
-    entity_dict["key_dataset"] = entity_name
-
-    # Restore Honeydew-specific entity fields from HONEYDEW custom_extension
-    entity_hd_hint = _get_honeydew_extension(ds)
-    for key in ("owner", "display_name", "hidden", "folder"):
-        if key in entity_hd_hint:
-            entity_dict[key] = entity_hd_hint[key]
-    if "labels" in entity_hd_hint:
-        entity_dict["labels"] = entity_hd_hint["labels"]
-
-    honeydew_relations = []
-    for rel in relations:
-        hr = _osi_relation_to_honeydew(rel)
-        if hr is not None:
-            honeydew_relations.append(hr)
-    entity_dict["relations"] = honeydew_relations
-
-    # Preserve OSI fields that have no Honeydew native equivalent
-    entity_meta = _build_osi_metadata(
-        ai_context=ai_context,
-        unique_keys=unique_keys,
-        custom_extensions=ds_ext or None,
-    )
-    if entity_meta:
-        entity_dict["metadata"] = [entity_meta]
-
-    files[f"{base}/{entity_name}.yml"] = _dump(entity_dict)
-
-    # ── classify fields into dataset attributes vs calculated attributes ────────
+def _fields_to_honeydew(
+    fields: list[dict[str, Any]],
+    entity_name: str,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Classify OSI fields into Honeydew dataset attributes and calculated attributes."""
     dataset_attrs: list[dict[str, Any]] = []
     calc_attrs: list[dict[str, Any]] = []
 
@@ -263,6 +222,62 @@ def _dataset_to_files(
                 if k in hd_hint:
                     calc[k] = hd_hint[k]
             calc_attrs.append(calc)
+
+    return dataset_attrs, calc_attrs
+
+
+def _dataset_to_files(
+    ds: dict[str, Any],
+    relations: list[dict[str, Any]],
+    metrics: list[dict[str, Any]],
+) -> dict[str, str]:
+    entity_name = ds["name"]
+    base = f"schema/{entity_name}"
+    files: dict[str, str] = {}
+
+    primary_key = ds.get("primary_key") or []
+    unique_keys = ds.get("unique_keys")
+    description = ds.get("description")
+    ai_context = ds.get("ai_context")
+    fields = ds.get("fields") or []
+    ds_ext = [e for e in (ds.get("custom_extensions") or []) if e.get("vendor_name") != HONEYDEW_VENDOR]
+
+    # ── entity YAML ────────────────────────────────────────────────────────────
+    entity_dict: dict[str, Any] = {"type": "entity", "name": entity_name}
+    if description:
+        entity_dict["description"] = description
+    if primary_key:
+        entity_dict["keys"] = list(primary_key)
+    entity_dict["key_dataset"] = entity_name
+
+    # Restore Honeydew-specific entity fields from HONEYDEW custom_extension
+    entity_hd_hint = _get_honeydew_extension(ds)
+    for key in ("owner", "display_name", "hidden", "folder"):
+        if key in entity_hd_hint:
+            entity_dict[key] = entity_hd_hint[key]
+    if "labels" in entity_hd_hint:
+        entity_dict["labels"] = entity_hd_hint["labels"]
+
+    honeydew_relations = []
+    for rel in relations:
+        hr = _osi_relation_to_honeydew(rel)
+        if hr is not None:
+            honeydew_relations.append(hr)
+    entity_dict["relations"] = honeydew_relations
+
+    # Preserve OSI fields that have no Honeydew native equivalent
+    entity_meta = _build_osi_metadata(
+        ai_context=ai_context,
+        unique_keys=unique_keys,
+        custom_extensions=ds_ext or None,
+    )
+    if entity_meta:
+        entity_dict["metadata"] = [entity_meta]
+
+    files[f"{base}/{entity_name}.yml"] = _dump(entity_dict)
+
+    # ── classify fields into dataset attributes vs calculated attributes ────────
+    dataset_attrs, calc_attrs = _fields_to_honeydew(fields, entity_name)
 
     # ── dataset YAML ───────────────────────────────────────────────────────────
     source_sql, dataset_type = _parse_osi_source(ds.get("source", ""))
@@ -356,6 +371,11 @@ def _osi_relation_to_honeydew(rel: dict[str, Any]) -> dict[str, Any] | None:
         hd_ext = _get_honeydew_extension(rel)
         if hd_ext.get("connection_expr"):
             honeydew_rel["connection_expr"] = {"sql": hd_ext["connection_expr"]}
+        else:
+            warnings.warn(
+                f"Relationship '{rel_name}' has no from_columns and no connection_expr; "
+                "Honeydew will not be able to resolve the join"
+            )
     return honeydew_rel
 
 
@@ -556,9 +576,11 @@ def convert_honeydew_to_osi(workspace_dir: str) -> str:
     if osi_metrics:
         sm["metrics"] = osi_metrics
 
+    extra_vendors = ws_osi_meta.get("vendors") or []
+    vendors = [HONEYDEW_VENDOR] + [v for v in extra_vendors if v != HONEYDEW_VENDOR]
     root: dict[str, Any] = {
         "version": SUPPORTED_OSI_VERSION,
-        "vendors": [HONEYDEW_VENDOR],
+        "vendors": vendors,
         "semantic_model": [sm],
     }
     return _dump(root)
@@ -860,6 +882,7 @@ def _build_osi_metadata(
     ai_context: Any = None,
     unique_keys: Any = None,
     custom_extensions: list | None = None,
+    extra_vendors: list[str] | None = None,
 ) -> dict[str, Any] | None:
     """Build a Honeydew metadata entry that stores OSI-only fields for round-tripping."""
     items: list[dict[str, Any]] = []
@@ -871,6 +894,8 @@ def _build_osi_metadata(
         items.append({"name": "unique_keys", "value": json.dumps(unique_keys)})
     if custom_extensions:
         items.append({"name": "custom_extensions", "value": json.dumps(custom_extensions)})
+    if extra_vendors:
+        items.append({"name": "vendors", "value": json.dumps(extra_vendors)})
 
     if not items:
         return None
@@ -891,7 +916,7 @@ def _read_osi_metadata(obj: dict[str, Any]) -> dict[str, Any]:
                     result[key] = json.loads(raw)
                 except (json.JSONDecodeError, TypeError):
                     result[key] = raw
-            elif key in ("unique_keys", "custom_extensions"):
+            elif key in ("unique_keys", "custom_extensions", "vendors"):
                 try:
                     result[key] = json.loads(raw)
                 except (json.JSONDecodeError, TypeError):
