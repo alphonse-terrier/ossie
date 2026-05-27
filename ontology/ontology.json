@@ -24,12 +24,24 @@
         "$ref": "#/$defs/Multiplicity"
       }
     },
-    "ontologies": {
+    "name": {
+      "type": "string",
+      "description": "Unique identifier for the ontology"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description"
+    },
+    "ai_context": {
+      "$ref": "https://raw.githubusercontent.com/open-semantic-interchange/OSI/main/core-spec/osi-schema.json#/$defs/AIContext"
+    },
+    "ontology": {
       "type": "array",
-      "description": "Collection of ontologies",
       "items": {
-        "$ref": "#/$defs/Ontology"
-      }
+        "$ref": "#/$defs/OntologyComponent"
+      },
+      "minItems": 1,
+      "description": "Components that define the concepts and relationships in this ontology"
     },
     "ontology_mappings": {
       "type": "array",
@@ -39,10 +51,10 @@
       }
     }
   },
-  "required": ["version", "ontologies"],
+  "required": ["version", "name", "ontology"],
   "additionalProperties": false,
   "$defs": {
-    "Component": {
+    "OntologyComponent": {
       "type": "object",
       "description": "Ontology component that defines a single concept and any relationships that are keyed primarily by that concept",
       "properties": {
@@ -283,10 +295,6 @@
           "type": "string",
           "description": "Human-readable description of this ontology map"
         },
-        "ontology": {
-          "type": "string",
-          "description": "Name of the ontology being mapped to"
-        },
         "semantic_model": {
           "$ref": "https://raw.githubusercontent.com/open-semantic-interchange/OSI/main/core-spec/osi-schema.json#/$defs/SemanticModel"
         },
@@ -298,34 +306,7 @@
           "description": "Maps logical model constructs to some concept and its relationships in the ontology"
         }
       },
-      "required": ["semantic_model", "ontology", "concept_mappings"],
-      "additionalProperties": false
-    },
-    "Ontology": {
-      "type": "object",
-      "description": "Top-level container representing a complete ontology",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Unique identifier for the ontology"
-        },
-        "description": {
-          "type": "string",
-          "description": "Human-readable description"
-        },
-        "ai_context": {
-          "$ref": "https://raw.githubusercontent.com/open-semantic-interchange/OSI/main/core-spec/osi-schema.json#/$defs/AIContext"
-        },
-        "concepts": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Component"
-          },
-          "minItems": 1,
-          "description": "Components that define the concepts and relationships in this ontology"
-        }
-      },
-      "required": ["name", "concepts"],
+      "required": ["semantic_model", "concept_mappings"],
       "additionalProperties": false
     }
   }

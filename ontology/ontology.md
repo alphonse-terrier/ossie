@@ -60,15 +60,15 @@ The allowable multiplicities of relationships defined in the [Relationships](#re
 ## Ontologies
 
 Ontologies are conceptual models of enterprise data that describe the enterprise in terms
-of concepts, relationships, and business rules. This specification represents ontologies
+of concepts, relationships, and business rules. This specification represents an ontology
 hierarchically, grouping each relationship under the concept that plays its first role.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `name` | string | Yes | Unique name of this ontology |
+| `name` | string | Yes | Unique name of this specification |
 | `description` | string | No | Human-readable description |
 | `ai_context` | string/object | No | Additional context for AI tools |
-| `concepts` | list | Yes | Concepts and relationships they group that form this ontology |
+| `ontology` | list | Yes | Concepts and relationships they group that form this ontology |
 
 ### Concepts
 
@@ -105,17 +105,16 @@ implicitly extends the built-in concept `Any`.
 
 This ontology snippet:
 ```yaml
-ontologies:
-  - name: EnterpriseOntology
-    concepts:
-      - concept:
-          name: SocialSecurityNr
-          type: ValueType
-          extends: [Integer]
-      - concept:
-          name: Employee
-          type: EntityType
-          extends: [Person]
+name: EnterpriseOntology
+ontology:
+  - concept:
+      name: SocialSecurityNr
+      type: ValueType
+      extends: [Integer]
+  - concept:
+      name: Employee
+      type: EntityType
+      extends: [Person]
 ```
 declares two concepts that extend other concepts.
 
@@ -141,25 +140,23 @@ Each relationship is uniquely identified by a prepending its declared name with 
 concept. For instance, in:
 
 ```yaml
-ontologies:
-  - name: EnterpriseOntology
-    concepts:
-      - concept:
-          name: Person
-          type: EntityType
-          identify_by: [ nr ]
-        relationships:
-          - name: nr
-            roles:
-              - concept: SocialSecurityNr
-            verbalizes: [ '{Person} is identified by {SocialSecurityNr}' ]
-            multiplicity: OneToOne
-          - name: earns
-            roles:
-              - concept: Salary
-            multiplicity: ManyToOne
-            verbalizes: [ "{Person} earns {Salary}" ]
-          ...
+ontology:
+  - concept:
+      name: Person
+      type: EntityType
+      identify_by: [ nr ]
+    relationships:
+      - name: nr
+        roles:
+          - concept: SocialSecurityNr
+        verbalizes: [ '{Person} is identified by {SocialSecurityNr}' ]
+        multiplicity: OneToOne
+      - name: earns
+        roles:
+          - concept: Salary
+        multiplicity: ManyToOne
+        verbalizes: [ "{Person} earns {Salary}" ]
+      ...
 ```
 
 the relationship is identified by the string `Person.earns`. This convention naturally supports
@@ -186,21 +183,19 @@ using this schema:
 For instance, in:
 
 ```yaml
-ontologies:
-  - name: EnterpriseOntology
-    concepts:
-      - concept:
-          name: Person
-          type: EntityType
-        relationships:
-          - name: files_married_joint
-            verbalizes: [ "{Person} files married filing joint" ]
-          - name: purchased_on
-            roles:
-              - concept: Vehicle
-              - concept: Date
-            multiplicity: ManyToOne
-            verbalizes: [ "{Person} puchased {Vehicle} on {Date}" ]
+ontology:
+  - concept:
+      name: Person
+      type: EntityType
+    relationships:
+      - name: files_married_joint
+        verbalizes: [ "{Person} files married filing joint" ]
+      - name: purchased_on
+        roles:
+          - concept: Vehicle
+          - concept: Date
+        multiplicity: ManyToOne
+        verbalizes: [ "{Person} puchased {Vehicle} on {Date}" ]
 ```
 
 the unary relationship `Person.files_married_joint` has an empty roles list, while the
@@ -213,20 +208,18 @@ any additional role whose player's name does not distinguish it from other roles
 the same relationship. For instance, in:
 
 ```yaml
-ontologies:
-  - name: EnterpriseOntology
-    concepts:
-      - concept:
-          name: Store
-          type: EntityType
-        relationships:
-          - name: ships_to_in_days
-            roles:
-              - concept: Store
-                name: destination
-              - concept: NrDays
-            multiplicity: ManyToOne
-            verbalizes: [ "{Store} ships to {Store:destination} in {NrDays}" ]
+ontology:
+  - concept:
+      name: Store
+      type: EntityType
+    relationships:
+      - name: ships_to_in_days
+        roles:
+          - concept: Store
+            name: destination
+          - concept: NrDays
+        multiplicity: ManyToOne
+        verbalizes: [ "{Store} ships to {Store:destination} in {NrDays}" ]
 ```
 
 the role name `destination` distinguishes the second `Store`-playing role from the first in
@@ -272,32 +265,30 @@ relationship as a view whose objects or links are derived from those of other co
 relationships. For instance:
 
 ```yaml
-ontologies:
-  - name: EnterpriseOntology
-    concepts:
-      - concept:
-          name: Person
-          type: EntityType
-        relationships:
-          - name: parent_of
-            roles:
-              - concept: Person
-                name: "child"
-            verbalizes: [ "{Person} is a parent of {Person:child}", "{Person:child} is a child of {Person}" ]
-          - name: ancestor_of
-            roles:
-              - concept: Person
-                name: "descendant"
-            derived_by:
-              - "Person.parent_of(descendant)"
-                "Person.ancestor_of.parent_of(descendant)"  
-          - name: taxed_at
-            roles:
-              - concept: TaxRate
-            derived_by:
-              - "Person.files_single AND Person.earns <= 11925 AND TaxRate == 10.0"
-              - "Person.files_married_joint AND Person.earns <= 23850 AND TaxRate == 10.0"
-              - ...
+ontology:
+  - concept:
+      name: Person
+      type: EntityType
+    relationships:
+      - name: parent_of
+        roles:
+          - concept: Person
+            name: "child"
+        verbalizes: [ "{Person} is a parent of {Person:child}", "{Person:child} is a child of {Person}" ]
+      - name: ancestor_of
+        roles:
+          - concept: Person
+            name: "descendant"
+        derived_by:
+          - "Person.parent_of(descendant)"
+            "Person.ancestor_of.parent_of(descendant)"  
+      - name: taxed_at
+        roles:
+          - concept: TaxRate
+        derived_by:
+          - "Person.files_single AND Person.earns <= 11925 AND TaxRate == 10.0"
+          - "Person.files_married_joint AND Person.earns <= 23850 AND TaxRate == 10.0"
+          - ...
 ```
 
 declares two derived relationships -- `ancestor_of` and `taxed_at`. Each link of `Person.ancestor_of`
@@ -323,14 +314,12 @@ A derived concept is one whose population is derived from that of its supertype 
 using one or more expressions. For instance:
 
 ```yaml
-ontologies:
-  - name: EnterpriseOntology
-    concepts:
-      - concept:
-          name: Employee
-          type: EntityType
-          extends: [Person]
-          derived_by: [ "EXISTS ( Person.earns )" ]
+ontology:
+  - concept:
+      name: Employee
+      type: EntityType
+      extends: [Person]
+      derived_by: [ "EXISTS ( Person.earns )" ]
 ```
 
 declares that the population of Employee is derived from the population of Person by
@@ -343,39 +332,35 @@ by declaring conditions that must hold over their populations. When applied to a
 expression must reference the concept, as in:
 
 ```yaml
-ontologies:
-  - name: EnterpriseOntology
-    concepts:
-      - concept:
-          name: SocialSecurityNr
-          type: ValueType
-          extends: [Integer]
-          requires: [ "0 < SocialSecurityNr", "SocialSecurityNr <= 999999999" ]
+ontology:
+  - concept:
+      name: SocialSecurityNr
+      type: ValueType
+      extends: [Integer]
+      requires: [ "0 < SocialSecurityNr", "SocialSecurityNr <= 999999999" ]
 ```
 
 When applied to a relationship, each expression must reference one or more roles of the
 relationship. For instance, in:
 
 ```yaml
-ontologies:
-  - name: EnterpriseOntology
-    concepts:
-      - concept:
-          name: Item
-          type: EntityType
-        relationships:
-          - name: offers_in
-            roles:
-              - concept: Store
-            verbalizations: [ "{Item} is offered for sale in {Store}", "{Store} offers sale of {Item}" ]  
-          - name: total_sales_in
-            roles:
-              - concept: Store
-              - concept: Amount
-            verbalizations: [ "{Item} sold for cumulative {Amount} in {Store}" ] 
-            requires:
-              - "Amount > 0.0"
-              - "Item.offers_in(Store)"
+ontology:
+  - concept:
+      name: Item
+      type: EntityType
+    relationships:
+      - name: offers_in
+        roles:
+          - concept: Store
+        verbalizations: [ "{Item} is offered for sale in {Store}", "{Store} offers sale of {Item}" ]  
+      - name: total_sales_in
+        roles:
+          - concept: Store
+          - concept: Amount
+        verbalizations: [ "{Item} sold for cumulative {Amount} in {Store}" ] 
+        requires:
+          - "Amount > 0.0"
+          - "Item.offers_in(Store)"
 ```
 
 the first expression requires any value that plays the `Amount` role to be positive while the second
@@ -418,24 +403,22 @@ When the concept is a value type or an entity type with a simple identifier, the
 a SQL expression. For instance, given this ontology snippet:
 
 ```yaml
-ontologies:
-  - name: EnterpriseOntology
-    concepts:
-      - concept:
-        name: SocialSecurityNr
-        type: ValueType
-        extends: [ Integer ]
-        requires: [ "0 < SocialSecurityNr", "SocialSecurityNr <= 999999999" ]
-      - concept:
-          name: Person
-          type: EntityType
-          identify_by: [ nr ]
-        relationships:
-          - name: nr
-            roles:
-              - concept: SocialSecurityNr
-            multiplicity: OneToOne
-            verbalizes: [ "{Person} is identified by {SocialSecurityNr}" ]
+ontology:
+  - concept:
+    name: SocialSecurityNr
+    type: ValueType
+    extends: [ Integer ]
+    requires: [ "0 < SocialSecurityNr", "SocialSecurityNr <= 999999999" ]
+  - concept:
+      name: Person
+      type: EntityType
+      identify_by: [ nr ]
+    relationships:
+      - name: nr
+        roles:
+          - concept: SocialSecurityNr
+        multiplicity: OneToOne
+        verbalizes: [ "{Person} is identified by {SocialSecurityNr}" ]
 ```
 
 an object mapping that computes `SocialSecurityNumber` values would use a SQL expression to retrieve or
@@ -470,21 +453,19 @@ Referent mappings have the following schema:
 For instance, consider this ontology snippet:
 
 ```yaml
-ontologies:
-  - name: EnterpriseOntology
-    concepts:
-      - concept:
-          name: OrderLineItem
-          type: EntityType
-          identify_by: [ "nr", "order" ]
-          requires: [ "OrderLineItem.nr", "OrderLineItem.order" ]
-        relationships:
-          - name: nr
-            roles: [ concept: LineNr ]
-            multiplicity: ManyToOne
-          - name: order
-            roles: [ concept: CustOrder ]
-            multiplicity: ManyToOne
+ontology:
+  - concept:
+      name: OrderLineItem
+      type: EntityType
+      identify_by: [ "nr", "order" ]
+      requires: [ "OrderLineItem.nr", "OrderLineItem.order" ]
+    relationships:
+      - name: nr
+        roles: [ concept: LineNr ]
+        multiplicity: ManyToOne
+      - name: order
+        roles: [ concept: CustOrder ]
+        multiplicity: ManyToOne
 ```
 
 and notice that `OrderLineItem` has a compound identifier. This concept mapping:
@@ -533,31 +514,29 @@ relationship, and so forth.
 For instance, this ontology snippet:
 
 ```yaml
-ontologies:
-  - name: EnterpriseOntology
-    concepts:
-      - concept:
-          name: Item
-          type: EntityType
-          identify_by: [ nr ]
-        relationships:
-          - name: nr
-            roles: [ concept: SkuNr ]
-            multiplicity: OneToOne
-            verbalises: "{Item} is identified by {SkuNr}"
-          - name: active     # A unary relationship
-            verbalizes: [ "{Item} is actively sold" ]
-          - name: active_in
-            roles: [ concept: Store ]
-            verbalises: [ "{Item} is actively sold in {Store}" ]
-          - name: returned_in_for
-            roles: [ concept: Store, concept: Amount ]
-            verbalizes: [ "{Item} returned in {Store} for {Amount}" ]
-            multiplicitly: ManyToOne
-          - name: sold_in_for
-            roles: [ concept: Store, concept: Amount ]
-            verbalizes: [ "{Item} sells in {Store} for {Amount}" ]
-            multiplicitly: ManyToOne
+ontology:
+  - concept:
+      name: Item
+      type: EntityType
+      identify_by: [ nr ]
+    relationships:
+      - name: nr
+        roles: [ concept: SkuNr ]
+        multiplicity: OneToOne
+        verbalises: "{Item} is identified by {SkuNr}"
+      - name: active     # A unary relationship
+        verbalizes: [ "{Item} is actively sold" ]
+      - name: active_in
+        roles: [ concept: Store ]
+        verbalises: [ "{Item} is actively sold in {Store}" ]
+      - name: returned_in_for
+        roles: [ concept: Store, concept: Amount ]
+        verbalizes: [ "{Item} returned in {Store} for {Amount}" ]
+        multiplicitly: ManyToOne
+      - name: sold_in_for
+        roles: [ concept: Store, concept: Amount ]
+        verbalizes: [ "{Item} sells in {Store} for {Amount}" ]
+        multiplicitly: ManyToOne
 ```
 declares one unary, one binary, and two ternary relationships whose links would be tuples
 of the form (Item), (Item, Store), and (Item, Store, Amount) respectively. And suppose a

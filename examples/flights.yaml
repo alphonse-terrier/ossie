@@ -1,104 +1,102 @@
 version: 0.1.1
-ontologies:
-  - name: flights
-    description: Ontology for flight-related concepts and relationships
-    concepts:
-      - concept:
-          name: Example_Runway
-          type: EntityType
-          identify_by: [ id ]
-        relationships:
-          - name: id
-            roles:
-              - concept: String
-            verbalizes: [ '{Example_Runway} id {String}' ]
-            multiplicity: ManyToOne
-          - name: shapelength
-            roles:
-              - concept: Float
-            verbalizes: [ '{Example_Runway} shapeLength {Float}' ]
-            multiplicity: ManyToOne
-          - name: airportid
-            roles:
-              - concept: String
-            verbalizes: [ '{Example_Runway} airportId {String}' ]
-            multiplicity: ManyToOne
-          - name: length
-            roles:
-              - concept: Float
-            verbalizes: [ '{Example_Runway} length {Float}' ]
-            multiplicity: ManyToOne
-          - name: geometry
-            roles:
-              - concept: String
-            verbalizes: [ '{Example_Runway} geometry {String}' ]
-            multiplicity: ManyToOne
-          - name: designator
-            roles:
-              - concept: String
-            verbalizes: [ '{Example_Runway} designator {String}' ]
-            multiplicity: ManyToOne
-          - name: airports
-            roles:
-              - concept: Example_Airport
-            verbalizes: [ '{Example_Runway} airports {Example_Airport}' ]
-            multiplicity: ManyToOne
-            derived_by: [ 'Example_Runway.airportid == Example_Airport.airportid' ]
-      - concept:
-          name: Example_RouteAlertComment
-          type: EntityType
-          identify_by: [ "id" ]
-        relationships:
-          - name: id
-            roles:
-              - concept: String
-            verbalizes: [ '{Example_RouteAlertComment} id {String}' ]
-            multiplicity: ManyToOne
-          - name: routealertid
-            roles:
-              - concept: String
-            verbalizes: [ '{Example_RouteAlertComment} routeAlertId {String}' ]
-            multiplicity: ManyToOne
-          - name: comment
-            roles:
-              - concept: String
-            verbalizes: [ '{Example_RouteAlertComment} comment {String}' ]
-            multiplicity: ManyToOne
-          - name: routealert
-            roles:
-              - concept: Example_RouteAlert
-            verbalizes: [ '{Example_RouteAlertComment} routeAlerts {Example_RouteAlert}' ]
-            multiplicity: ManyToOne
-            derived_by: [ 'Example_RouteAlertComment.routealertid == Example_RouteAlert.routealertid' ]
-      - concept:
-          name: Example_Airport
-          type: EntityType
-          identify_by: [ "airportid" ]
-        relationships:
-          - name: airportid
-            roles:
-              - concept: String
-            verbalizes: [ '{Example_Airport} airportId {String}' ]
-            multiplicity: ManyToOne
-          - name: displayairportname
-            roles:
-              - concept: String
-            verbalizes: [ '{Example_Airport} displayAirportName {String}' ]
-            multiplicity: ManyToOne
-          - name: displaycitymarketnamefull
-            roles:
-              - concept: String
-            verbalizes: [ '{Example_Airport} displayCityMarketNameFull {String}' ]
-            multiplicity: ManyToOne
-          - name: flights
-            roles:
-              - concept: Example_Flight
-            verbalizes: [ '{Example_Airport} flights {Example_Flight}' ]
-            derived_by: [ 'Example_Airport.airportid == Example_Flight.originairportid OR Example_Airport.airportid == Example_Flight.destairportid' ]
+name: flights
+description: Ontology for flight-related concepts and relationships
+ontology:
+  - concept:
+      name: Example_Runway
+      type: EntityType
+      identify_by: [ id ]
+    relationships:
+      - name: id
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_Runway} id {String}' ]
+        multiplicity: ManyToOne
+      - name: shapelength
+        roles:
+          - concept: Float
+        verbalizes: [ '{Example_Runway} shapeLength {Float}' ]
+        multiplicity: ManyToOne
+      - name: airportid
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_Runway} airportId {String}' ]
+        multiplicity: ManyToOne
+      - name: length
+        roles:
+          - concept: Float
+        verbalizes: [ '{Example_Runway} length {Float}' ]
+        multiplicity: ManyToOne
+      - name: geometry
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_Runway} geometry {String}' ]
+        multiplicity: ManyToOne
+      - name: designator
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_Runway} designator {String}' ]
+        multiplicity: ManyToOne
+      - name: airports
+        roles:
+          - concept: Example_Airport
+        verbalizes: [ '{Example_Runway} airports {Example_Airport}' ]
+        multiplicity: ManyToOne
+        derived_by: [ 'Example_Runway.airportid == Example_Airport.airportid' ]
+  - concept:
+      name: Example_RouteAlertComment
+      type: EntityType
+      identify_by: [ "id" ]
+    relationships:
+      - name: id
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_RouteAlertComment} id {String}' ]
+        multiplicity: ManyToOne
+      - name: routealertid
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_RouteAlertComment} routeAlertId {String}' ]
+        multiplicity: ManyToOne
+      - name: comment
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_RouteAlertComment} comment {String}' ]
+        multiplicity: ManyToOne
+      - name: routealert
+        roles:
+          - concept: Example_RouteAlert
+        verbalizes: [ '{Example_RouteAlertComment} routeAlerts {Example_RouteAlert}' ]
+        multiplicity: ManyToOne
+        derived_by: [ 'Example_RouteAlertComment.routealertid == Example_RouteAlert.routealertid' ]
+  - concept:
+      name: Example_Airport
+      type: EntityType
+      identify_by: [ "airportid" ]
+    relationships:
+      - name: airportid
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_Airport} airportId {String}' ]
+        multiplicity: ManyToOne
+      - name: displayairportname
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_Airport} displayAirportName {String}' ]
+        multiplicity: ManyToOne
+      - name: displaycitymarketnamefull
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_Airport} displayCityMarketNameFull {String}' ]
+        multiplicity: ManyToOne
+      - name: flights
+        roles:
+          - concept: Example_Flight
+        verbalizes: [ '{Example_Airport} flights {Example_Flight}' ]
+        derived_by: [ 'Example_Airport.airportid == Example_Flight.originairportid OR Example_Airport.airportid == Example_Flight.destairportid' ]
 ontology_mappings:
   - name: flights_map
     description: Example mapping of logical fields to ontology concepts and relationships
-    ontology: flights
     semantic_model:
       name: Logical_Flights_Model
       description: Logical model for flight data
