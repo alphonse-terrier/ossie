@@ -18,11 +18,12 @@ OSI converters follow a **hub-and-spoke** architecture:
                          │
 ┌─────────────┐    ┌─────┴─────┐    ┌─────────────┐
 │     dbt     ├────┤    OSI    ├────┤  Salesforce │
-└─────────────┘    └─────┬─────┘    └─────────────┘
-                         │
-                  ┌──────┴──────┐
-                  │  Databricks │
-                  └─────────────┘
+└─────────────┘    └──┬─────┬──┘    └─────────────┘
+                      │     │
+             ┌────────┘     └────────┐
+      ┌──────┴──────┐        ┌───────┴─────┐
+      │  Databricks │        │   Honeydew  │
+      └─────────────┘        └─────────────┘
 ```
 
 This approach avoids the need for point-to-point converters between every pair of vendors. With N vendors, a point-to-point strategy would require N*(N-1) converters. With OSI as the hub, only 2*N converters are needed (one import and one export per vendor), and interoperability with all other vendors comes for free.
@@ -54,6 +55,7 @@ The OSI specification currently defines extensions for the following vendors:
 | `SALESFORCE` | Salesforce / Tableau semantic layer |
 | `DBT` | dbt semantic models |
 | `DATABRICKS` | Databricks semantic layer |
+| `HONEYDEW` | Honeydew workspace |
 
 Each vendor may define custom extensions (via the `custom_extensions` field in the OSI spec) to carry vendor-specific metadata that does not have an equivalent in the core specification.
 

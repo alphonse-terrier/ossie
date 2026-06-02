@@ -54,6 +54,7 @@ The following are well-known examples:
 | `DBT` | dbt-specific attributes |
 | `DATABRICKS` | Databricks-specific attributes |
 | `GOODDATA` | GoodData-specific attributes |
+| `HONEYDEW` | Honeydew-specific attributes |
 
 ## Semantic Model
 
