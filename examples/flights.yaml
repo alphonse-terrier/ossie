@@ -1,0 +1,1092 @@
+version: 0.2.0.dev0
+name: flights
+description: Ontology for flight-related concepts and relationships
+ontology:
+  - concept:
+      name: Example_Runway
+      type: EntityType
+      identify_by: [ id ]
+    relationships:
+      - name: id
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_Runway} id {String}' ]
+        multiplicity: ManyToOne
+      - name: shapelength
+        roles:
+          - concept: Float
+        verbalizes: [ '{Example_Runway} shapeLength {Float}' ]
+        multiplicity: ManyToOne
+      - name: airportid
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_Runway} airportId {String}' ]
+        multiplicity: ManyToOne
+      - name: length
+        roles:
+          - concept: Float
+        verbalizes: [ '{Example_Runway} length {Float}' ]
+        multiplicity: ManyToOne
+      - name: geometry
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_Runway} geometry {String}' ]
+        multiplicity: ManyToOne
+      - name: designator
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_Runway} designator {String}' ]
+        multiplicity: ManyToOne
+      - name: airports
+        roles:
+          - concept: Example_Airport
+        verbalizes: [ '{Example_Runway} airports {Example_Airport}' ]
+        multiplicity: ManyToOne
+        derived_by: [ 'Example_Runway.airportid == Example_Airport.airportid' ]
+  - concept:
+      name: Example_RouteAlertComment
+      type: EntityType
+      identify_by: [ "id" ]
+    relationships:
+      - name: id
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_RouteAlertComment} id {String}' ]
+        multiplicity: ManyToOne
+      - name: routealertid
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_RouteAlertComment} routeAlertId {String}' ]
+        multiplicity: ManyToOne
+      - name: comment
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_RouteAlertComment} comment {String}' ]
+        multiplicity: ManyToOne
+      - name: routealert
+        roles:
+          - concept: Example_RouteAlert
+        verbalizes: [ '{Example_RouteAlertComment} routeAlerts {Example_RouteAlert}' ]
+        multiplicity: ManyToOne
+        derived_by: [ 'Example_RouteAlertComment.routealertid == Example_RouteAlert.routealertid' ]
+  - concept:
+      name: Example_Airport
+      type: EntityType
+      identify_by: [ "airportid" ]
+    relationships:
+      - name: airportid
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_Airport} airportId {String}' ]
+        multiplicity: ManyToOne
+      - name: displayairportname
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_Airport} displayAirportName {String}' ]
+        multiplicity: ManyToOne
+      - name: displaycitymarketnamefull
+        roles:
+          - concept: String
+        verbalizes: [ '{Example_Airport} displayCityMarketNameFull {String}' ]
+        multiplicity: ManyToOne
+      - name: flights
+        roles:
+          - concept: Example_Flight
+        verbalizes: [ '{Example_Airport} flights {Example_Flight}' ]
+        derived_by: [ 'Example_Airport.airportid == Example_Flight.originairportid OR Example_Airport.airportid == Example_Flight.destairportid' ]
+ontology_mappings:
+  - name: flights_map
+    description: Example mapping of logical fields to ontology concepts and relationships
+    semantic_model:
+      name: Logical_Flights_Model
+      description: Logical model for flight data
+      datasets:
+        - name: Example_Runway_example_runway
+          source: PBACON_ATT_DB.GANDALF.EXAMPLE_RUNWAY
+          fields:
+            - name: id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(id AS VARCHAR)
+            - name: shape_length
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(shape_length AS DOUBLE)
+            - name: airport_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(airport_id AS VARCHAR)
+            - name: length
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(length AS DOUBLE)
+            - name: geometry
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(geometry AS VARCHAR)
+            - name: designator
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(designator AS VARCHAR)
+        - name: Example_RouteAlertComment_example_route_alert_comment
+          source: PBACON_ATT_DB.GANDALF.EXAMPLE_ROUTE_ALERT_COMMENT
+          fields:
+            - name: id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(id AS VARCHAR)
+            - name: alert_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(alert_id AS VARCHAR)
+            - name: type
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(type AS VARCHAR)
+            - name: created_by
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(created_by AS VARCHAR)
+            - name: title
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(title AS VARCHAR)
+            - name: comment
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(comment AS VARCHAR)
+            - name: created_at
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(created_at AS TIMESTAMP)
+        - name: Example_Aircraft_example_aircraft
+          source: PBACON_ATT_DB.GANDALF.EXAMPLE_AIRCRAFT
+          description: Aircraft data with basic properties. Full 2023 flight history available
+            for a subset of aircraft where the "Complete Flight History" property is "true".
+          fields:
+            - name: flight_count
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(flight_count AS INTEGER)
+            - name: serial_number
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(serial_number AS VARCHAR)
+            - name: mode_scode_hex
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(mode_scode_hex AS VARCHAR)
+            - name: title
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(title AS VARCHAR)
+            - name: number_of_seats
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(number_of_seats AS INTEGER)
+            - name: tail_num
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(tail_num AS VARCHAR)
+            - name: op_carrier_airline_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(op_carrier_airline_id AS VARCHAR)
+            - name: carrier_name
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(carrier_name AS VARCHAR)
+            - name: mode_scode
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(mode_scode AS INTEGER)
+            - name: complete_flight_history
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(complete_flight_history AS BOOLEAN)
+            - name: manufacturer
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(manufacturer AS VARCHAR)
+            - name: latest_flight_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(latest_flight_id AS VARCHAR)
+            - name: model
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(model AS VARCHAR)
+            - name: carrier_iata_code
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(carrier_iata_code AS VARCHAR)
+            - name: year_mfr
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(year_mfr AS VARCHAR)
+            - name: acquisition_date
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(acquisition_date AS TIMESTAMP)
+            - name: capacity_in_pounds
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(capacity_in_pounds AS INTEGER)
+        - name: Example_Airport_example_airport
+          source: PBACON_ATT_DB.GANDALF.EXAMPLE_AIRPORT
+          description: Airports with various geospatial properties. Useful for map examples.
+            Full 2023 flight history available for a subset of airports where the "Complete
+            Flight History" property is "true".
+          fields:
+            - name: airport_state_code
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(airport_state_code AS VARCHAR)
+            - name: arriving_flight_count
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(arriving_flight_count AS INTEGER)
+            - name: display_city_market_name_full
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(display_city_market_name_full AS VARCHAR)
+            - name: average_dep_delay
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(average_dep_delay AS DOUBLE)
+            - name: longitude
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(longitude AS DOUBLE)
+            - name: airport_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(airport_id AS VARCHAR)
+            - name: airport_start_date
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(airport_start_date AS TIMESTAMP)
+            - name: airport_state_name
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(airport_state_name AS VARCHAR)
+            - name: daily_avg_dep_delay
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(daily_avg_dep_delay AS VARCHAR)
+            - name: average_arr_delay
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(average_arr_delay AS DOUBLE)
+            - name: display_airport_city_name_full
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(display_airport_city_name_full AS VARCHAR)
+            - name: daily_avg_arr_delay
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(daily_avg_arr_delay AS VARCHAR)
+            - name: daily_count_of_flights
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(daily_count_of_flights AS VARCHAR)
+            - name: complete_flight_history
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(complete_flight_history AS BOOLEAN)
+            - name: display_airport_name
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(display_airport_name AS VARCHAR)
+            - name: airport
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(airport AS VARCHAR)
+            - name: departing_flight_count
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(departing_flight_count AS INTEGER)
+            - name: geopoint
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(geopoint AS VARCHAR)
+            - name: latitude
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(latitude AS DOUBLE)
+        - name: Example_Flight_example_flight
+          source: PBACON_ATT_DB.GANDALF.EXAMPLE_FLIGHT
+          description: Represents each individual commercial passenger flight in the US
+            in 2023. With geospatial and timeseries property examples.
+          fields:
+            - name: dep_delay
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(dep_delay AS INTEGER)
+            - name: air_time
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(air_time AS DOUBLE)
+            - name: flight_number
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(flight_number AS VARCHAR)
+            - name: airline_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(airline_id AS VARCHAR)
+            - name: late_aircraft_delay
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(late_aircraft_delay AS INTEGER)
+            - name: actual_elapsed_time
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(actual_elapsed_time AS DOUBLE)
+            - name: taxi_in
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(taxi_in AS INTEGER)
+            - name: scheduled_departure_timestamp
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(scheduled_departure_timestamp AS TIMESTAMP)
+            - name: dest_airport_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(dest_airport_id AS VARCHAR)
+            - name: arr_delay
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(arr_delay AS INTEGER)
+            - name: cancelled
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(cancelled AS BOOLEAN)
+            - name: carrier_code
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(carrier_code AS VARCHAR)
+            - name: destination_display_airport_city_name_full
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(destination_display_airport_city_name_full AS VARCHAR)
+            - name: carrier_delay
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(carrier_delay AS INTEGER)
+            - name: cancellation_code
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(cancellation_code AS VARCHAR)
+            - name: origin_latitude
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(origin_latitude AS DOUBLE)
+            - name: destination_geopoint
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(destination_geopoint AS VARCHAR)
+            - name: flights
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(flights AS DOUBLE)
+            - name: destination_display_city_market_name_full
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(destination_display_city_market_name_full AS VARCHAR)
+            - name: distance
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(distance AS DOUBLE)
+            - name: flight_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(flight_id AS VARCHAR)
+            - name: origin_geopoint
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(origin_geopoint AS VARCHAR)
+            - name: scheduled_arrival_timestamp
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(scheduled_arrival_timestamp AS TIMESTAMP)
+            - name: destination_latitude
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(destination_latitude AS DOUBLE)
+            - name: wheels_on_timestamp
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(wheels_on_timestamp AS TIMESTAMP)
+            - name: longitude_sensor_series_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(longitude_sensor_series_id AS VARCHAR)
+            - name: nas_delay
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(nas_delay AS INTEGER)
+            - name: latitude_sensor_series_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(latitude_sensor_series_id AS VARCHAR)
+            - name: destination_longitude
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(destination_longitude AS DOUBLE)
+            - name: origin_airport_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(origin_airport_id AS VARCHAR)
+            - name: origin_display_airport_name
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(origin_display_airport_name AS VARCHAR)
+            - name: security_delay
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(security_delay AS INTEGER)
+            - name: origin_display_airport_city_name_full
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(origin_display_airport_city_name_full AS VARCHAR)
+            - name: origin_longitude
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(origin_longitude AS DOUBLE)
+            - name: taxi_out
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(taxi_out AS INTEGER)
+            - name: origin_display_city_market_name_full
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(origin_display_city_market_name_full AS VARCHAR)
+            - name: destination_airport
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(destination_airport AS VARCHAR)
+            - name: origin_airport
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(origin_airport AS VARCHAR)
+            - name: date
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(date AS DATE)
+            - name: destination_display_airport_name
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(destination_display_airport_name AS VARCHAR)
+            - name: wheels_off_timestamp
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(wheels_off_timestamp AS TIMESTAMP)
+            - name: scheduled_elapsed_time
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(scheduled_elapsed_time AS INTEGER)
+            - name: tail_num
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(tail_num AS VARCHAR)
+            - name: departure_timestamp
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(departure_timestamp AS TIMESTAMP)
+            - name: carrier_name
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(carrier_name AS VARCHAR)
+            - name: route_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(route_id AS VARCHAR)
+            - name: weather_delay
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(weather_delay AS INTEGER)
+            - name: diverted
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(diverted AS BOOLEAN)
+            - name: arrival_timestamp
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(arrival_timestamp AS TIMESTAMP)
+            - name: flight_title
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(flight_title AS VARCHAR)
+            - name: route_title
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(route_title AS VARCHAR)
+        - name: Example_Carrier_example_carrier
+          source: PBACON_ATT_DB.GANDALF.EXAMPLE_CARRIER
+          description: Carriers with derived fleet metrics from associated aircraft. Full
+            2023 flight history available for a subset of carriers where the "Complete Flight
+            History" property is "true".
+          fields:
+            - name: carrier
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(carrier AS VARCHAR)
+            - name: average_manufacture_year
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(average_manufacture_year AS DOUBLE)
+            - name: std_dev_manufacture_year
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(std_dev_manufacture_year AS DOUBLE)
+            - name: carrier_name
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(carrier_name AS VARCHAR)
+            - name: daily_avg_arr_delay
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(daily_avg_arr_delay AS VARCHAR)
+            - name: daily_count_of_flights
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(daily_count_of_flights AS VARCHAR)
+            - name: complete_flight_history
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(complete_flight_history AS BOOLEAN)
+            - name: total_capacity_in_pounds
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(total_capacity_in_pounds AS INTEGER)
+            - name: airline_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(airline_id AS VARCHAR)
+            - name: total_seats
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(total_seats AS INTEGER)
+            - name: aircraft_count
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(aircraft_count AS INTEGER)
+            - name: daily_avg_dep_delay
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(daily_avg_dep_delay AS VARCHAR)
+        - name: Example_FlightSensor_example_flight_sensor
+          source: PBACON_ATT_DB.GANDALF.EXAMPLE_FLIGHT_SENSOR
+          description: 'The flight sensor holds any sensor readings for the flight object.
+            It is linked to flights as a sensor object and therefore analyses on the flight
+            object can automatically access time series on the flight sensor. '
+          fields:
+            - name: series_name
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(series_name AS VARCHAR)
+            - name: units
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(units AS VARCHAR)
+            - name: flight_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(flight_id AS VARCHAR)
+            - name: title
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(title AS VARCHAR)
+            - name: flight_sensor_series_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(flight_sensor_series_id AS VARCHAR)
+            - name: unique_sensor_flight_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(unique_sensor_flight_id AS VARCHAR)
+        - name: Example_RouteAlert_example_route_alert
+          source: PBACON_ATT_DB.GANDALF.EXAMPLE_ROUTE_ALERT
+          description: Alerts generated based on historical route performance, structured
+            as an operational object type to demonstrate basic status and assignment patterns.
+          fields:
+            - name: normalized_deviation_metric
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(normalized_deviation_metric AS DOUBLE)
+            - name: normalized_weighted_change_metric
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(normalized_weighted_change_metric AS DOUBLE)
+            - name: percent_change
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(percent_change AS DOUBLE)
+            - name: priority
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(priority AS VARCHAR)
+            - name: assignee
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(assignee AS VARCHAR)
+            - name: id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(id AS VARCHAR)
+            - name: flight_count
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(flight_count AS INTEGER)
+            - name: alert_type
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(alert_type AS VARCHAR)
+            - name: risk_level
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(risk_level AS INTEGER)
+            - name: deviation_metric
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(deviation_metric AS DOUBLE)
+            - name: floor_threshold
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(floor_threshold AS DOUBLE)
+            - name: description_markdown
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(description_markdown AS VARCHAR)
+            - name: status
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(status AS VARCHAR)
+            - name: title
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(title AS VARCHAR)
+            - name: alert_period_length
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(alert_period_length AS INTEGER)
+            - name: percent_change_threshold
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(percent_change_threshold AS DOUBLE)
+            - name: route_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(route_id AS VARCHAR)
+            - name: metric_description
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(metric_description AS VARCHAR)
+            - name: description
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(description AS VARCHAR)
+            - name: previous_deviation_metric
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(previous_deviation_metric AS DOUBLE)
+            - name: investigation_notes
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(investigation_notes AS VARCHAR)
+            - name: alert_period_start
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(alert_period_start AS DATE)
+            - name: percent_change_display
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(percent_change_display AS DOUBLE)
+        - name: Example_Explainer_example_explainer
+          source: PBACON_ATT_DB.GANDALF.EXAMPLE_EXPLAINER
+          description: Stores re-usable callout references to integrate into Workshop and
+            other one state examples
+          fields:
+            - name: id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(id AS VARCHAR)
+            - name: link_url
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(link_url AS VARCHAR)
+            - name: text
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(text AS VARCHAR)
+            - name: title
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(title AS VARCHAR)
+            - name: link_text
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(link_text AS VARCHAR)
+        - name: Example_Log_UpdateRouteAlertStatus_example_log_update_route_alert_status
+          source: PBACON_ATT_DB.GANDALF.EXAMPLE_LOG_UPDATE_ROUTE_ALERT_STATUS
+          description: 'This object type was automatically created when logging was enabled
+            for the Action # type: Update Route Alert Status'
+          fields:
+            - name: action_triggerer
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(action_triggerer AS VARCHAR)
+            - name: status
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(status AS VARCHAR)
+            - name: action_rid
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(action_rid AS VARCHAR)
+            - name: action_type_rid
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(action_type_rid AS VARCHAR)
+            - name: action_type_version
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(action_type_version AS VARCHAR)
+            - name: action_summary
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(action_summary AS VARCHAR)
+            - name: action_timestamp
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(action_timestamp AS TIMESTAMP)
+        - name: Example_Route_example_route
+          source: PBACON_ATT_DB.GANDALF.EXAMPLE_ROUTE
+          description: Derived from flights between pairs of departure and arrival airports.
+            Demonstrates the use of deriving "intermediate" object types from granular data
+            as well as pre-calculating default metrics in a pipeline. Full 2023 flight history
+            available for a subset of routes where the "Complete Flight History" property
+            is "true".
+          fields:
+            - name: average_dep_delay
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(average_dep_delay AS DOUBLE)
+            - name: destination_longitude
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(destination_longitude AS DOUBLE)
+            - name: origin_airport_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(origin_airport_id AS VARCHAR)
+            - name: destination_airport_1
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(destination_airport_1 AS VARCHAR)
+            - name: origin_display_airport_name
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(origin_display_airport_name AS VARCHAR)
+            - name: daily_avg_dep_delay
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(daily_avg_dep_delay AS VARCHAR)
+            - name: origin_display_airport_city_name_full
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(origin_display_airport_city_name_full AS VARCHAR)
+            - name: average_arr_delay
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(average_arr_delay AS DOUBLE)
+            - name: origin_longitude
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(origin_longitude AS DOUBLE)
+            - name: daily_count_of_flights
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(daily_count_of_flights AS VARCHAR)
+            - name: daily_avg_arr_delay
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(daily_avg_arr_delay AS VARCHAR)
+            - name: dest_airport_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(dest_airport_id AS VARCHAR)
+            - name: origin_airport
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(origin_airport AS VARCHAR)
+            - name: destination_display_airport_city_name_full
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(destination_display_airport_city_name_full AS VARCHAR)
+            - name: origin_latitude
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(origin_latitude AS DOUBLE)
+            - name: actual_elapsed_time_standard_deviation
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(actual_elapsed_time_standard_deviation AS DOUBLE)
+            - name: destination_display_airport_name
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(destination_display_airport_name AS VARCHAR)
+            - name: destination_geopoint
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(destination_geopoint AS VARCHAR)
+            - name: average_actual_elapsed_time
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(average_actual_elapsed_time AS DOUBLE)
+            - name: flights_count
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(flights_count AS INTEGER)
+            - name: distance
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(distance AS DOUBLE)
+            - name: distance_group
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(distance_group AS INTEGER)
+            - name: route_id
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(route_id AS VARCHAR)
+            - name: origin_geopoint
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(origin_geopoint AS VARCHAR)
+            - name: complete_flight_history
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(complete_flight_history AS BOOLEAN)
+            - name: destination_latitude
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(destination_latitude AS DOUBLE)
+            - name: route_title
+              expression:
+                dialects:
+                  - dialect: ANSI_SQL
+                    expression: CAST(route_title AS VARCHAR)
+    concept_mappings:
+      - concept: Example_Runway
+        object_mappings:
+          - referent_mappings:
+              - relationship: id
+                expression: Example_Runway_example_runway.id
+        link_mappings:
+          - object_mapping:
+              referent_mappings:
+                - relationship: id
+                  expression: Example_Runway_example_runway.id
+            children:
+              - object_mapping:
+                  concept: Float
+                  expression: Example_Runway_example_runway.length
+                relationship: length
+              - object_mapping:
+                  concept: String
+                  expression: Example_Runway_example_runway.geometry
+                relationship: geometry
+              - object_mapping:
+                  concept: String
+                  expression: Example_Runway_example_runway.designator
+                relationship: designator
+              - object_mapping:
+                  concept: Float
+                  expression: Example_Runway_example_runway.shape_length
+                relationship: shape_length
+              - object_mapping:
+                  concept: String
+                  expression: Example_Runway_example_runway.airport_id
+                relationship: airport_id

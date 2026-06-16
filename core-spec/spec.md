@@ -39,23 +39,6 @@ Supported SQL and expression language dialects for metrics and field definitions
 | `DATABRICKS` | Databricks SQL |
 | `MAQL` | GoodData MAQL (Metric Analysis and Query Language) |
 
-### Vendors
-
-The `vendor_name` field is a free-form string, allowing any vendor or organization to
-define custom extensions without requiring changes to the core specification.
-
-The following are well-known examples:
-
-| Vendor | Description |
-|--------|-------------|
-| `COMMON` | Common/standard extensions |
-| `SNOWFLAKE` | Snowflake-specific attributes |
-| `SALESFORCE` | Salesforce/Tableau-specific attributes |
-| `DBT` | dbt-specific attributes |
-| `DATABRICKS` | Databricks-specific attributes |
-| `GOODDATA` | GoodData-specific attributes |
-| `HONEYDEW` | Honeydew-specific attributes |
-
 ## Semantic Model
 
 The top-level container that represents a complete semantic model, including datasets, relationships, and  metrics.
@@ -367,6 +350,23 @@ custom_extensions:
   - vendor_name: string  # Free-form string identifying the vendor
     data: string         # JSON string containing vendor-specific data
 ```
+
+### Vendor Names
+
+The `vendor_name` field is a free-form string, allowing any vendor or organization to
+define custom extensions without requiring changes to the core specification.
+
+The following are well-known examples:
+
+| Vendor | Description |
+|--------|-------------|
+| `COMMON` | Common/standard extensions |
+| `SNOWFLAKE` | Snowflake-specific attributes |
+| `SALESFORCE` | Salesforce/Tableau-specific attributes |
+| `DBT` | dbt-specific attributes |
+| `DATABRICKS` | Databricks-specific attributes |
+| `GOODDATA` | GoodData-specific attributes |
+| `HONEYDEW` | Honeydew-specific attributes |
 
 ### Examples
 

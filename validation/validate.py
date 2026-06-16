@@ -10,6 +10,7 @@ Validates OSI YAML files against:
 
 Usage:
     python validation/validate.py <yaml_file>
+    python validation/validate.py <yaml_file> --schema ontology/ontology.json
     python validation/validate.py examples/tpcds_semantic_model.yaml
 """
 
@@ -147,6 +148,10 @@ def validate_sql_expression(expr: str, dialect: str, context: str) -> str | None
 
 def validate_sql(data: dict) -> list[str]:
     """Validate SQL expressions in fields and metrics."""
+    # Only semantic model files contain SQL expressions to validate.
+    if not data.get("semantic_model"):
+        return []
+
     if not SQLGLOT_AVAILABLE:
         return ["[SQL] Warning: sqlglot not installed, skipping SQL validation. Install with: pip install sqlglot"]
 
@@ -191,8 +196,16 @@ def main():
         print(__doc__)
         sys.exit(1)
 
-    yaml_path = Path(sys.argv[1])
+    args = sys.argv[1:]
+    yaml_path = Path(args[0])
+
     schema_path = Path(__file__).parent.parent / "core-spec" / "osi-schema.json"
+    if len(args) > 1:
+        if len(args) == 3 and args[1] == "--schema":
+            schema_path = Path(args[2])
+        else:
+            print("Usage: python validation/validate.py <yaml_file> [--schema <schema_file>]")
+            sys.exit(1)
 
     if not yaml_path.exists():
         print(f"Error: File not found: {yaml_path}")
@@ -216,9 +229,12 @@ def main():
     # Run validations
     errors = []
     errors.extend(validate_schema(data, schema))
-    errors.extend(validate_unique_names(data))
-    errors.extend(validate_references(data))
-    errors.extend(validate_sql(data))
+
+    # Run semantic-model-specific checks only for semantic model payloads.
+    if data.get("semantic_model"):
+        errors.extend(validate_unique_names(data))
+        errors.extend(validate_references(data))
+        errors.extend(validate_sql(data))
 
     # Report results
     if errors:
