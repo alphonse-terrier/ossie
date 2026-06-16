@@ -1,5 +1,9 @@
 version: 0.2.0.dev0
 name: Flights
+description: Ontology of flights into and out of airports.
+requires:
+  - COUNT[Airport] > 0         # there must be at least one Airport
+  - COUNT[Carrier] > 0         # there must be at least one Carrier
 ontology:
 - concept:
     name: NrFeet
@@ -21,6 +25,12 @@ ontology:
     description: "Unit of measure for time in minutes"
     type: ValueType
     extends: [ Decimal ]
+- concept:
+    name: CancelationCode
+    description: "The single character code that identifies the reason a flight is canceled"
+    type: ValueType
+    extends: [ String ]
+    requires: [ CancelationCode == 'A' OR CancelationCode == 'B' OR CancelationCode == 'C' OR CancelationCode == 'D' ]
 - concept:
     name: Capacity
     description: "The capacity of an aircraft, measured in pounds."
@@ -53,6 +63,12 @@ ontology:
     name: Distance
     type: ValueType
     extends: [ NrMiles ]
+- concept:
+    name: DistanceGroup
+    description: "A number used to group distances of different lengths, where 1 groups the shortest and 10 the longest."
+    type: ValueType
+    extends: [ Integer ]
+    requires: [ 1 <= DistanceGroup, DistanceGroup <= 10 ]
 - concept:
     name: RunwayGeometry
     description: "A polygon that models the shape of a runway."
@@ -88,6 +104,22 @@ ontology:
     name: Year
     type: ValueType
     extends: [ String ]
+- concept:
+    name: CancelationReason
+    description: "A curated set of reasons that explain why a flight is canceled"
+    type: EntityType
+    identify_by: [ code ]
+  relationships:
+  - name: code
+    roles:
+    - concept: CancelationCode
+    verbalizes: [ '{CancelationReason} is identified by {CancelationCode}']
+    multiplicity: OneToOne
+  - name: description
+    roles:
+    - concept: String
+    verbalizes: [ '{CancelationReason} has description- {String}' ]  # The hyphen after "description" is significant when verbalizing constraints
+    multiplicity: ManyToOne                                          # Each CancelationReason has at most one description String
 - concept:
     name: State
     type: EntityType
@@ -238,7 +270,7 @@ ontology:
     roles:
     - concept: Carrier
     verbalizes:
-    - '{Aircraft} carrier {Carrier}'
+    - '{Aircraft} is operated by {Carrier}'
     multiplicity: ManyToOne
 - concept:
     name: AirportName
@@ -276,8 +308,8 @@ ontology:
     roles:
     - concept: Delay
     verbalizes:
-    - '{Airport} averageDepDelay {Delay}'
-    multiplicity: ManyToOne
+    - '{Airport} has average- departure {Delay}'    # The hyphen after "average" has significance when verbalizing constraints
+    multiplicity: ManyToOne                         # Each Airport has at most one average departure Delay
     derived_by: [ 'Delay == AVG[Flight.departure_delay WHERE Airport == Flight.route.departure GROUP BY Airport]' ]
   - name: longitude
     roles:
@@ -289,8 +321,8 @@ ontology:
     roles:
     - concept: Delay
     verbalizes:
-    - '{Airport} has average arrival {Delay}'
-    multiplicity: ManyToOne
+    - '{Airport} has average- arrival {Delay}'    # The hyphen after "average" has significance when verbalizing constraints
+    multiplicity: ManyToOne                       # Each Airport has at most one average arrival Delay
     derived_by: [ 'Delay == AVG[Flight.arrival_delay WHERE Airport == Flight.route.destination GROUP BY Airport]' ]
   - name: name
     roles:
@@ -342,8 +374,8 @@ ontology:
     roles:
     - concept: Delay
     verbalizes:
-    - '{Flight} has departure {Delay}'
-    multiplicity: ManyToOne
+    - '{Flight} has departure- {Delay}'    # The hyphen after "departure" has significance when verbalizing constraints
+    multiplicity: ManyToOne                # Each Flight has at most one departure Delay
   - name: number
     roles:
     - concept: FlightNr
@@ -360,26 +392,23 @@ ontology:
     roles:
     - concept: Delay
     verbalizes:
-    - '{Flight} has arrival {Delay}'
-    multiplicity: ManyToOne
-  - name: cancelled
-    roles:
-    - concept: Boolean
+    - '{Flight} has arrival- {Delay}'    # The hyphen after "arrival" has significance when verbalizing constraints
+    multiplicity: ManyToOne              # Each Flight has at most one arrival Delay
+  - name: canceled
     verbalizes:
-    - '{Flight} cancelled {Boolean}'
-    multiplicity: ManyToOne
-  - name: cancellationcode
+    - '{Flight} was canceled'
+  - name: canceled_due_to
     roles:
-    - concept: String
+    - concept: CancelationReason
     verbalizes:
-    - '{Flight} cancellationCode {String}'
+    - '{Flight} was canceled due to {CancelationReason}'
     multiplicity: ManyToOne
   - name: distance
     roles:
     - concept: Distance
     verbalizes:
-    - '{Flight} spans actual {Distance}'
-    multiplicity: ManyToOne
+    - '{Flight} spans actual- {Distance}'    # The hyphen after "actual" has significance when verbalizing constraints
+    multiplicity: ManyToOne                  # Each Flight spans at most one actual Distance
   - name: id
     roles:
     - concept: FlightId
@@ -420,11 +449,8 @@ ontology:
     multiplicity: ManyToOne
     requires: [ Flight.departs_at < Flight.arrives_at ]
   - name: diverted
-    roles:
-    - concept: Boolean
     verbalizes:
-    - '{Flight} diverted {Boolean}'
-    multiplicity: ManyToOne
+    - '{Flight} was diverted'
   - name: arrives_at
     roles:
     - concept: DateTime
@@ -490,15 +516,15 @@ ontology:
     roles:
     - concept: Delay
     verbalizes:
-    - '{Route} has average departure {Delay}'
-    multiplicity: ManyToOne
+    - '{Route} has average- departure {Delay}'    # The hyphen after "average" has significance when verbalizing constraints
+    multiplicity: ManyToOne                       # Each Route has at most one average departure Delay
     derived_by: [ 'Delay == AVG[Flight.departure_delay WHERE Flight.route(Route) GROUP BY Route]' ]
   - name: average_arrival_delay
     roles:
     - concept: Delay
     verbalizes:
-    - '{Route} has average arrival {Delay}'
-    multiplicity: ManyToOne
+    - '{Route} has average- arrival {Delay}'    # The hyphen after "average" has significance when verbalizing constraints
+    multiplicity: ManyToOne                     # Each Route has at most one average arrival Delay
     derived_by: [ 'Delay == AVG[Flight.arrival_delay WHERE Flight.route(Route) GROUP BY Route]' ]
   - name: distance
     roles:
@@ -506,11 +532,11 @@ ontology:
     verbalizes:
     - '{Route} spans {Distance}'
     multiplicity: ManyToOne
-  - name: distancegroup
+  - name: lies_in
     roles:
-    - concept: Integer
+    - concept: DistanceGroup
     verbalizes:
-    - '{Route} distanceGroup {Integer}'
+    - '{Route} has {DistanceGroup}'
     multiplicity: ManyToOne
   - name: id
     roles:
@@ -528,15 +554,15 @@ ontology:
     roles:
     - concept: Airport
     verbalizes:
-    - '{Route} connects to destination {Airport}'
-    multiplicity: ManyToOne
+    - '{Route} connects to destination- {Airport}'  # The hyphen after "destination" has significance when verbalizing constraints
+    multiplicity: ManyToOne                         # Each Route connects to at most one destination Airport
     requires: [ 'NOT Route.departure(Airport)' ]
   - name: departure
     roles:
     - concept: Airport
     verbalizes:
-    - '{Route} connects to departure {Airport}'
-    multiplicity: ManyToOne
+    - '{Route} connects to departure- {Airport}'    # The hyphen after "departure" has significance when verbalizing constraints
+    multiplicity: ManyToOne                         # Each Route connects to at most one departure Airport
     requires: [ 'NOT Route.destination(Airport)' ]
 ontology_mappings:
 - name: flights_mapping
@@ -988,6 +1014,16 @@ ontology_mappings:
     - object_mapping:
         referent_mappings:
         - relationship: id
+          expression: FLIGHT.id WHERE ( FLIGHT.diverted == TRUE )
+      relationship: diverted
+    - object_mapping:
+        referent_mappings:
+        - relationship: id
+          expression: FLIGHT.id WHERE ( FLIGHT.cancelled == TRUE )
+      relationship: canceled
+    - object_mapping:
+        referent_mappings:
+        - relationship: id
           expression: FLIGHT.id
       children:
       - object_mapping:
@@ -1007,13 +1043,11 @@ ontology_mappings:
           expression: FLIGHT.scheduled_departure
         relationship: scheduled_departure
       - object_mapping:
-          concept: Boolean
-          expression: FLIGHT.cancelled
-        relationship: cancelled
-      - object_mapping:
-          concept: String
-          expression: FLIGHT.cancel_code
-        relationship: cancellationcode
+          concept: CancelationReason
+          referent_mappings:
+          - relationship: code
+            expression: FLIGHT.cancel_code
+        relationship: canceled_due_to
       - object_mapping:
           concept: Distance
           expression: FLIGHT.distance
@@ -1030,10 +1064,6 @@ ontology_mappings:
           concept: DateTime
           expression: FLIGHT.departure
         relationship: departs_at
-      - object_mapping:
-          concept: Boolean
-          expression: FLIGHT.diverted
-        relationship: diverted
       - object_mapping:
           concept: DateTime
           expression: FLIGHT.arrival
@@ -1087,9 +1117,9 @@ ontology_mappings:
           expression: ROUTE.distance
         relationship: distance
       - object_mapping:
-          concept: Integer
+          concept: DistanceGroup
           expression: ROUTE.dist_grp
-        relationship: distancegroup
+        relationship: lies_in
       - object_mapping:
           concept: String
           expression: ROUTE.name
