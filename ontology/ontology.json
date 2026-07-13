@@ -21,6 +21,13 @@
     "ai_context": {
       "$ref": "https://raw.githubusercontent.com/apache/ossie/main/core-spec/osi-schema.json#/$defs/AIContext"
     },
+    "requires": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Expression"
+      },
+      "description": "Expressions that constrain the population of this ontology"
+    },
     "ontology": {
       "type": "array",
       "items": {
@@ -94,6 +101,13 @@
             "$ref": "#/$defs/Expression"
           },
           "description": "Expressions that define how this concept is derived"
+        },
+        "requires": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Expression"
+          },
+          "description": "Expressions that constrain the population of this relationship"
         },
         "verbalizes": {
           "type": "array",
