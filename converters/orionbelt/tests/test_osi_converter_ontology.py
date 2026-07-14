@@ -1,9 +1,9 @@
 """Tests for the OBML → OSI **ontology** converter (OBMLtoOSIOntology).
 
-Validates that the derived ontology document conforms to the vendored
-``osi-ontology-schema.json`` (with external core-spec refs resolved offline),
-that OBML join cardinality maps to OSI multiplicity, and that the documented
-gaps (many-to-many, composite keys, missing PK) surface as warnings.
+Validates that the derived ontology document passes the converter's semantic
+checks (unique concepts, reference integrity), that OBML join cardinality maps
+to OSI multiplicity, and that the documented gaps (many-to-many, composite keys,
+missing PK) surface as warnings.
 """
 
 from __future__ import annotations
@@ -105,11 +105,10 @@ class TestOntologyStructure:
             "expression": "ORDERS.CUSTOMER_ID",
         }
 
-    def test_validates_against_ontology_schema_offline(self) -> None:
+    def test_passes_ontology_semantic_validation(self) -> None:
         doc = conv.OBMLtoOSIOntology(_OBML, model_name="sales").convert()
         result = conv.validate_osi_ontology(doc)
-        assert result.valid, result.schema_errors + result.semantic_errors
-        assert not result.schema_errors
+        assert result.valid, result.semantic_errors
         assert not result.semantic_errors
 
     def test_one_to_one_multiplicity(self) -> None:

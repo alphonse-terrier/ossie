@@ -42,12 +42,6 @@ from ossie_orionbelt._common import (
     _OBML_VENDOR_READ as _OBML_VENDOR_READ,
 )
 from ossie_orionbelt._common import (
-    _OSI_KNOWN_DIALECTS as _OSI_KNOWN_DIALECTS,
-)
-from ossie_orionbelt._common import (
-    _OSI_KNOWN_VENDORS as _OSI_KNOWN_VENDORS,
-)
-from ossie_orionbelt._common import (
     _OSI_VENDOR_READ as _OSI_VENDOR_READ,
 )
 from ossie_orionbelt._common import (
@@ -79,12 +73,6 @@ from ossie_orionbelt.validation import (
     _OBML_SCHEMA_PATH as _OBML_SCHEMA_PATH,
 )
 from ossie_orionbelt.validation import (
-    _OSI_CORE_SPEC_RAW_URL as _OSI_CORE_SPEC_RAW_URL,
-)
-from ossie_orionbelt.validation import (
-    _OSI_ONTOLOGY_SCHEMA_PATH as _OSI_ONTOLOGY_SCHEMA_PATH,
-)
-from ossie_orionbelt.validation import (
     _OSI_SCHEMA_PATH as _OSI_SCHEMA_PATH,
 )
 from ossie_orionbelt.validation import (
@@ -95,9 +83,6 @@ from ossie_orionbelt.validation import (
 )
 from ossie_orionbelt.validation import (
     ValidationResult as ValidationResult,
-)
-from ossie_orionbelt.validation import (
-    _osi_core_registry as _osi_core_registry,
 )
 from ossie_orionbelt.validation import (
     _validate_json_schema as _validate_json_schema,

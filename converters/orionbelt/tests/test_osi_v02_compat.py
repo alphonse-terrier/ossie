@@ -8,7 +8,7 @@ Covers the v2.6 spec bump from OSI v0.1.1 → v0.2.0.dev0:
 - Dataset ``unique_keys`` round-trips lossly via OBSL custom_extensions
 - Field ``label`` round-trips via OBSL custom_extensions
 - Legacy v0.1.1 inputs are normalized in place by the shim
-- Every emitted document validates against the vendored v0.2 schema
+- Every emitted document validates against the resolved v0.2 core schema
 """
 
 from __future__ import annotations
@@ -25,16 +25,13 @@ import ossie_orionbelt.converter as conv
 # Fixtures
 # ---------------------------------------------------------------------------
 
-_SCHEMA_PATH = (
-    Path(__file__).resolve().parents[1] / "src" / "ossie_orionbelt" / "schemas" / "osi-schema.json"
-)
-
 
 @pytest.fixture(scope="module")
 def schema_validator() -> Any:
-    """Draft 2020-12 validator pinned to the vendored OSI v0.2 schema."""
+    """Draft 2020-12 validator pinned to the resolved OSI v0.2 core schema
+    (vendored copy if present, otherwise the ossie ``core-spec/`` copy)."""
     jsonschema = pytest.importorskip("jsonschema")
-    with open(_SCHEMA_PATH) as f:
+    with open(conv._OSI_SCHEMA_PATH) as f:
         schema = json.load(f)
     return jsonschema.Draft202012Validator(schema)
 

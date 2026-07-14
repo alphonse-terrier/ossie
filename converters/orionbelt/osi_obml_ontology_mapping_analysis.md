@@ -1,8 +1,8 @@
 # OBML → OSI Ontology Mapping Analysis
 
 This pins the rules used by `OBMLtoOSIOntology` to derive an **OSI ontology
-document** (validated against `src/ossie_orionbelt/schemas/osi-ontology-schema.json`, OSI version
-`0.2.0.dev0`) from an OBML semantic model.
+document** (OSI ontology format, version `0.2.0.dev0`) from an OBML semantic
+model.
 
 The OSI ontology is a **separate document** from the OSI core-spec semantic
 model (different `$id`, different required root). It is produced alongside the
@@ -68,10 +68,10 @@ falling back to the dataset name when `source` has no dotted physical table.
 
 ## Validation
 
-`validate_osi_ontology()` runs:
-1. JSON Schema (Draft 2020-12) against `osi-ontology-schema.json`.
-2. Semantic checks: unique concept names; relationship `roles` reference defined
-   concepts; `concept_mappings` reference defined concepts.
+`validate_osi_ontology()` runs semantic checks only (ossie ships no OSI ontology
+schema, and the converter emits ontology documents but never consumes them):
+unique concept names; relationship `roles` reference defined concepts;
+`concept_mappings` reference defined concepts.
 
 ## Stability note
 

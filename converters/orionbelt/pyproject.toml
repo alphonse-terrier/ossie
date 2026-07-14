@@ -36,11 +36,11 @@ ossie-orionbelt = "ossie_orionbelt.cli:main"
 [tool.hatch.build.targets.wheel]
 packages = ["src/ossie_orionbelt"]
 
-# All three schemas (the two OSI artefacts plus a vendored snapshot of the
-# canonical OBML schema) live in src/ossie_orionbelt/schemas/ as tracked files,
-# so the sdist and wheel are self-contained and build in isolation. The OBML
-# snapshot is kept in sync with the repo-root schema/obml-schema.json by a
-# drift-guard test (tests/unit/test_ossie_orionbelt_schema_sync.py).
+# Only the OBML schema (OrionBelt's own format) is vendored under
+# src/ossie_orionbelt/schemas/. OSI core documents are validated against the
+# repo's core-spec/osi-schema.json, resolved at runtime by
+# validation._osi_schema_path (no duplicate copy). The OSI ontology export is
+# validated semantically only (ossie ships no ontology schema).
 
 [tool.ruff]
 line-length = 100
@@ -52,6 +52,13 @@ select = ["E", "F", "I", "N", "UP", "B", "A", "SIM"]
 [tool.mypy]
 python_version = "3.12"
 files = ["src/ossie_orionbelt"]
+
+# The OrionBelt engine is an optional runtime dependency: validate_obml uses it
+# for semantic validation when present and degrades gracefully otherwise, so it
+# is not installed in this standalone converter and has no published stubs.
+[[tool.mypy.overrides]]
+module = ["orionbelt.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -167,7 +167,7 @@ The converter includes dual-layer validation for both formats, ensuring that con
 
 ### 4.2 OSI Validation
 
-1. **JSON Schema** — validates against `osi-schema.json` (Draft 2020-12)
+1. **JSON Schema** — validates against the OSI core `osi-schema.json` (Draft 2020-12), resolved from the repo's `core-spec/` (no vendored copy)
 2. **Unique names** — checks uniqueness of dataset, field, metric, and relationship names
 3. **References** — verifies that relationship `from`/`to` reference existing datasets
 
@@ -258,7 +258,7 @@ Converting the OBML output back to OSI produces a valid OSI model where:
 |---|---|
 | `tests/fixtures/tpcds_osi.yaml` | Official TPC-DS OSI example (from OSI repo) |
 | `tests/fixtures/tpcds_as_obml.yaml` | Converted OBML output |
-| `src/ossie_orionbelt/schemas/osi-schema.json` | OSI JSON Schema (Draft 2020-12, from OSI repo) |
+| `core-spec/osi-schema.json` | OSI core JSON Schema (Draft 2020-12), resolved at runtime; not vendored |
 | `src/ossie_orionbelt/converter.py` | Bidirectional converter with validation |
 
 ## 7. Future Considerations
