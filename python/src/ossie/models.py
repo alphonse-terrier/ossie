@@ -31,6 +31,7 @@ class OSIDialect(str, Enum):
     MAQL = "MAQL"
     TABLEAU = "TABLEAU"
     DATABRICKS = "DATABRICKS"
+    BIGQUERY = "BIGQUERY"
 
 
 class OSIVendor(str, Enum):
