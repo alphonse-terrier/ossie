@@ -21,6 +21,8 @@
 
 Converts Ossie YAML semantic models to [Snowflake Cortex Analyst](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst) semantic model YAML. Pure offline conversion — no Snowflake connection required.
 
+> **Output format:** This converter produces the **legacy** Cortex Analyst semantic model YAML — the stage-based format. It is *not* the newer Snowflake [semantic view YAML](https://docs.snowflake.com/en/user-guide/views-semantic/semantic-view-yaml-spec) (`views-semantic`) that pairs with the `CREATE SEMANTIC VIEW` DDL. The two structures overlap heavily but are distinct Snowflake surfaces. See [Ossie YAML and Snowflake semantic views](#ossie-yaml-and-snowflake-semantic-views) below for how to get to an actual semantic view.
+
 > **Note:** This converter is under active development. It handles common cases but has not been thoroughly tested against all edge cases — use with caution in production.
 
 ## Setup
@@ -44,3 +46,10 @@ python3 -m pytest tests/
 ## Limitations
 
 Some Ossie concepts (e.g., `ai_context` on relationships) do not have a native counterpart in the Snowflake semantic model. These are dropped during conversion and the converter will emit warnings so you know what was left behind.
+
+## Ossie YAML and Snowflake semantic views
+
+A dedicated open-source Ossie ↔ semantic-view converter would be a welcome future addition. In the meantime, Snowflake can already read and write Ossie YAML natively, so the round-trip works today:
+
+- `SYSTEM$CREATE_SEMANTIC_VIEW_FROM_OSI_YAML` — create a semantic view directly from Ossie YAML (Ossie YAML → semantic view).
+- `SYSTEM$READ_OSI_YAML_FROM_SEMANTIC_VIEW` — export an existing semantic view to Ossie YAML (semantic view → Ossie YAML).
